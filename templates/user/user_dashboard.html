@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<title>User Dashboard</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+
+
+<style>
+
+body{
+    background:#f5f6fa;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+
+.sidebar{
+
+    position:fixed;
+    left:0;
+    top:0;
+    width:250px;
+    height:100vh;
+    background:linear-gradient(180deg, #2c3e50 0%, #34495e 100%);
+    color:white;
+    box-shadow: 2px 0 10px rgba(0,0,0,.2);
+    z-index: 100;
+
+}
+
+
+.sidebar h3 {
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+
+.sidebar a{
+
+    display:block;
+    padding:12px 25px;
+    color:white;
+    text-decoration:none;
+    transition: all 0.3s ease;
+    border-left: 3px solid transparent;
+
+}
+
+
+.sidebar a:hover{
+
+    background:rgba(255,255,255,.15);
+    border-left-color: #3498db;
+    padding-left: 30px;
+
+}
+
+.sidebar a.active {
+    background: rgba(52, 152, 219, 0.3);
+    border-left-color: #3498db;
+    font-weight: 600;
+}
+
+.main{
+
+    margin-left:250px;
+
+}
+
+
+.topbar{
+
+    background:white;
+    padding:20px 30px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    box-shadow:0 2px 10px rgba(0,0,0,.1);
+    border-bottom: 3px solid #3498db;
+
+}
+
+
+.topbar h3 {
+    margin: 0;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+
+.card{
+
+    border:none;
+    border-radius:10px;
+    transition: all 0.3s ease;
+
+}
+
+
+.stat-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    box-shadow: 0 5px 15px rgba(0,0,0,.1);
+}
+
+
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,.15);
+}
+
+
+.stat-card.blue {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+
+.stat-card.green {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+
+.stat-card.orange {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: 700;
+}
+
+
+.event-card {
+    background: white;
+    border-left: 4px solid #3498db;
+    transition: all 0.3s ease;
+}
+
+
+.event-card:hover {
+    box-shadow: 0 5px 15px rgba(0,0,0,.1);
+    border-left-color: #e74c3c;
+}
+
+
+.badge-custom {
+    padding: 0.5rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+}
+
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<div class="sidebar">
+
+
+<h3 class="text-center p-4">
+User Panel
+</h3>
+
+
+<a href="{% url 'user_dashboard' %}" class="active">
+<i class="bi bi-speedometer2"></i>
+Dashboard
+</a>
+
+
+<a href="{% url 'user_events' %}">
+<i class="bi bi-calendar-event"></i>
+Events
+</a>
+
+
+<a href="{% url 'my_registrations' %}">
+<i class="bi bi-bookmark-check"></i>
+My Registrations
+</a>
+
+
+<a href="{% url 'my_qr_codes' %}">
+<i class="bi bi-qr-code"></i>
+My QR Codes
+</a>
+
+
+<a href="{% url 'profile' %}">
+<i class="bi bi-person-circle"></i>
+Profile
+</a>
+
+
+<a href="{% url 'contact_support' %}">
+<i class="bi bi-headset"></i>
+Contact Support
+</a>
+
+
+<a href="{% url 'logout' %}">
+<i class="bi bi-box-arrow-right"></i>
+Logout
+</a>
+
+
+</div>
+
+
+
+<div class="main">
+
+
+<div class="topbar">
+
+<h3>User Dashboard</h3>
+
+{% if messages %}
+
+    <div class="container-fluid px-4 pt-3">
+
+        {% for message in messages %}
+
+            <div
+                class="alert
+                {% if message.tags == 'success' %}
+                    alert-success
+                {% elif message.tags == 'error' %}
+                    alert-danger
+                {% elif message.tags == 'warning' %}
+                    alert-warning
+                {% else %}
+                    alert-info
+                {% endif %}
+                alert-dismissible fade show"
+                role="alert">
+
+                {% if message.tags == "success" %}
+                    <i class="bi bi-check-circle-fill me-2"></i>
+                {% elif message.tags == "error" %}
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                {% else %}
+                    <i class="bi bi-info-circle-fill me-2"></i>
+                {% endif %}
+
+                {{ message }}
+
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="alert">
+                </button>
+
+            </div>
+
+        {% endfor %}
+
+    </div>
+
+{% endif %}
+
+<div>
+
+{% if profile.profile_picture and profile.profile_picture.name != 'profile_pictures/default.png' %}
+<img
+    src="{{ profile.profile_picture.url }}"
+    alt="Profile Picture"
+    width="42"
+    height="42"
+    class="rounded-circle object-fit-cover me-2">
+{% endif %}
+
+<strong>
+{{ request.user.username }}
+</strong>
+
+</div>
+
+
+</div>
+
+
+
+<div class="container-fluid px-4 py-4">
+
+<!-- Statistics Section -->
+<div class="row g-4 mb-5">
+
+<div class="col-md-3">
+<div class="card stat-card blue p-4 text-center">
+<i class="bi bi-calendar-event fs-2 mb-3"></i>
+<h6 class="text-uppercase">Available Events</h6>
+<div class="stat-number">{{ total_events }}</div>
+</div>
+</div>
+
+<div class="col-md-3">
+<div class="card stat-card green p-4 text-center">
+<i class="bi bi-bookmark-check fs-2 mb-3"></i>
+<h6 class="text-uppercase">My Registrations</h6>
+<div class="stat-number">{{ user_registrations_count }}</div>
+</div>
+</div>
+
+<div class="col-md-3">
+<div class="card stat-card orange p-4 text-center">
+<i class="bi bi-list-ul fs-2 mb-3"></i>
+<h6 class="text-uppercase">Categories</h6>
+<div class="stat-number">{{ total_categories }}</div>
+</div>
+</div>
+
+<div class="col-md-3">
+<div class="card stat-card p-4 text-center" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+<i class="bi bi-person-circle fs-2 mb-3"></i>
+<h6 class="text-uppercase">Welcome</h6>
+<div style="font-size: 1.2rem; font-weight: 500;">{{ request.user.username }}</div>
+</div>
+</div>
+
+</div>
+
+<!-- Quick Stats Row -->
+<div class="row g-3 mb-5">
+<div class="col-md-3">
+<div class="card stat-card p-3 text-center" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+<i class="bi bi-arrow-up-circle fs-2 mb-2"></i>
+<h6 class="text-uppercase">Upcoming Events</h6>
+<div class="stat-number">{{ upcoming_count }}</div>
+</div>
+</div>
+<div class="col-md-3">
+<div class="card stat-card p-3 text-center" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+<i class="bi bi-check-circle fs-2 mb-2"></i>
+<h6 class="text-uppercase">Past Events</h6>
+<div class="stat-number">{{ past_count }}</div>
+</div>
+</div>
+</div>
+
+<!-- Your Registrations Section -->
+
+<div class="row mb-5" id="registered-events-section">
+
+
+<div class="col-12">
+
+    <h5 class="section-title">
+        <i class="bi bi-bookmark-check-fill me-2"></i>
+        Your Registered Events
+    </h5>
+
+    <a href="{% url 'my_qr_codes' %}" class="btn btn-outline-primary btn-sm mb-3">
+        <i class="bi bi-qr-code me-1"></i>View My QR Codes
+    </a>
+
+    {% if registered_events %}
+
+        <!-- Upcoming Registered Events -->
+
+        {% if upcoming_events %}
+
+            <div class="mb-4">
+
+                <h6 class="mb-3 text-success">
+                    <i class="bi bi-arrow-up-circle-fill me-2"></i>
+                    Upcoming Events
+                </h6>
+
+                <div class="row g-3">
+
+                    {% for event in upcoming_events %}
+
+                        <div class="col-md-6 col-lg-4">
+
+                            <div class="card event-card shadow-sm p-3 h-100">
+
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+
+                                    <h6 class="text-primary fw-bold mb-0"
+                                        style="flex: 1;">
+                                        {{ event.event_name }}
+                                    </h6>
+
+                                    <span class="badge bg-success badge-custom">
+                                        Upcoming
+                                    </span>
+
+                                </div>
+
+                                <p class="small text-muted mb-2">
+                                    <i class="bi bi-tag"></i>
+                                    {{ event.category }}
+                                </p>
+
+                                <p class="small text-muted mb-2">
+                                    <i class="bi bi-geo-alt"></i>
+                                    {{ event.venue }}
+                                </p>
+
+                                <p class="small text-muted mb-3">
+
+                                    <i class="bi bi-calendar-event"></i>
+
+                                    {{ event.start_date|date:"M d, Y" }}
+                                    to
+                                    {{ event.end_date|date:"M d, Y" }}
+
+                                </p>
+
+                                <div class="d-flex justify-content-between align-items-center">
+
+                                    <span class="badge bg-info badge-custom">
+                                        {{ event.status }}
+                                    </span>
+
+                                    <a
+                                        href="{% url 'event_details' event.id %}"
+                                        class="btn btn-sm btn-outline-primary">
+                                        Details
+                                    </a>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    {% endfor %}
+
+                </div>
+
+            </div>
+
+        {% endif %}
+
+
+        <!-- Past / Completed Registered Events -->
+
+        {% if past_events %}
+
+            <div class="mb-4">
+
+                <h6 class="mb-3 text-secondary">
+                    <i class="bi bi-check-circle-fill me-2"></i>
+                    Past Events
+                </h6>
+
+                <div class="row g-3">
+
+                    {% for event in past_events %}
+
+                        <div class="col-md-6 col-lg-4">
+
+                            <div
+                                class="card event-card shadow-sm p-3 h-100"
+                                style="opacity: 0.85;">
+
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+
+                                    <h6
+                                        class="text-secondary fw-bold mb-0"
+                                        style="flex: 1;">
+                                        {{ event.event_name }}
+                                    </h6>
+
+                                    <span class="badge bg-secondary badge-custom">
+                                        Completed
+                                    </span>
+
+                                </div>
+
+                                <p class="small text-muted mb-2">
+                                    <i class="bi bi-tag"></i>
+                                    {{ event.category }}
+                                </p>
+
+                                <p class="small text-muted mb-2">
+                                    <i class="bi bi-geo-alt"></i>
+                                    {{ event.venue }}
+                                </p>
+
+                                <p class="small text-muted mb-3">
+
+                                    <i class="bi bi-calendar-event"></i>
+
+                                    {{ event.start_date|date:"M d, Y" }}
+                                    to
+                                    {{ event.end_date|date:"M d, Y" }}
+
+                                </p>
+
+                                <div class="d-flex justify-content-between align-items-center">
+
+                                    <span class="badge bg-dark badge-custom">
+                                        {{ event.status }}
+                                    </span>
+
+                                    <a
+                                        href="{% url 'event_details' event.id %}"
+                                        class="btn btn-sm btn-outline-secondary">
+                                        View
+                                    </a>
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    {% endfor %}
+
+                </div>
+
+            </div>
+
+        {% endif %}
+
+
+        {% if registered_events|length > 0 %}
+
+            <div
+                class="alert alert-light border-start border-primary"
+                role="alert">
+
+                <i class="bi bi-info-circle me-2"></i>
+
+                Total Registered Events:
+
+                <strong>
+                    {{ user_registrations_count }}
+                </strong>
+
+            </div>
+
+        {% endif %}
+
+    {% else %}
+
+        <div class="alert alert-info" role="alert">
+
+            <i class="bi bi-info-circle me-2"></i>
+
+            You haven't registered for any events yet.
+
+            <a href="#available-events-section">
+                Browse Events
+            </a>
+
+        </div>
+
+    {% endif %}
+
+</div>
+
+</div>
+
+
+
+<!-- Search & Filter Section -->
+
+<div class="row mb-5">
+
+
+<div class="col-12">
+
+    <h5 class="section-title">
+        <i class="bi bi-funnel-fill me-2"></i>
+        Search & Filter Events
+    </h5>
+
+    <form method="get" class="row g-3 mb-4">
+
+        <div class="col-md-4">
+
+            <div class="input-group">
+
+                <span class="input-group-text bg-light">
+                    <i class="bi bi-search"></i>
+                </span>
+
+                <input
+                    type="text"
+                    class="form-control"
+                    name="search"
+                    placeholder="Search events..."
+                    value="{{ search_query }}">
+
+            </div>
+
+        </div>
+
+
+        <div class="col-md-3">
+
+            <select
+                class="form-select"
+                name="category"
+                onchange="this.form.submit()">
+
+                <option value="">
+                    All Categories
+                </option>
+
+                {% for category in categories %}
+
+                    <option
+                        value="{{ category.id }}"
+                        {% if category.id|stringformat:"s" == category_filter %}
+                            selected
+                        {% endif %}>
+
+                        {{ category.category_name }}
+
+                    </option>
+
+                {% endfor %}
+
+            </select>
+
+        </div>
+
+
+        <div class="col-md-3">
+
+            <select
+                class="form-select"
+                name="status"
+                onchange="this.form.submit()">
+
+                <option value="">
+                    All Status
+                </option>
+
+                {% for status in event_statuses %}
+
+                    <option
+                        value="{{ status }}"
+                        {% if status == status_filter %}
+                            selected
+                        {% endif %}>
+
+                        {{ status }}
+
+                    </option>
+
+                {% endfor %}
+
+            </select>
+
+        </div>
+
+
+        <div class="col-md-2">
+
+            <button
+                type="submit"
+                class="btn btn-primary w-100">
+
+                <i class="bi bi-search me-2"></i>
+                Search
+
+            </button>
+
+        </div>
+
+    </form>
+
+</div>
+
+</div>
+
+<!-- Available Events Section -->
+
+<div
+    class="row"
+    id="available-events-section">
+
+
+<div class="col-12">
+
+    <h5 class="section-title">
+
+        <i class="bi bi-calendar-event-fill me-2"></i>
+
+        All Available Events
+
+    </h5>
+
+
+    {% if all_events %}
+
+        <div class="row g-3">
+
+            {% for event in all_events|slice:":6" %}
+
+                <div class="col-md-6 col-lg-4">
+
+                    <div class="card event-card shadow-sm p-3 h-100">
+
+                        <!-- Event Name + Status -->
+
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+
+                            <h6
+                                class="text-primary fw-bold mb-0"
+                                style="flex: 1;">
+
+                                {{ event.event_name }}
+
+                            </h6>
+
+                            {% if event.status == "Upcoming" %}
+
+                                <span class="badge bg-success badge-custom">
+                                    Upcoming
+                                </span>
+
+                            {% elif event.status == "Ongoing" %}
+
+                                <span class="badge bg-primary badge-custom">
+                                    Ongoing
+                                </span>
+
+                            {% elif event.status == "Completed" %}
+
+                                <span class="badge bg-secondary badge-custom">
+                                    Completed
+                                </span>
+
+                            {% elif event.status == "Cancelled" %}
+
+                                <span class="badge bg-danger badge-custom">
+                                    Cancelled
+                                </span>
+
+                            {% endif %}
+
+                        </div>
+
+
+                        <!-- Category -->
+
+                        <p class="small text-muted mb-2">
+
+                            <i class="bi bi-tag"></i>
+
+                            <strong>
+                                {{ event.category }}
+                            </strong>
+
+                        </p>
+
+
+                        <!-- Venue -->
+
+                        <p class="small text-muted mb-2">
+
+                            <i class="bi bi-geo-alt"></i>
+
+                            {{ event.venue }}
+
+                        </p>
+
+
+                        <!-- Participants -->
+
+                        <p class="small text-muted mb-2">
+
+                            <i class="bi bi-people-fill"></i>
+
+                            <strong>
+                                {{ event.eventmember_set.count }}
+                                /
+                                {{ event.max_participants }}
+                            </strong>
+
+                            Registered
+
+                        </p>
+
+
+                        <!-- Description -->
+
+                        <p
+                            class="small mb-3"
+                            style="height: 50px; overflow: hidden;">
+
+                            {{ event.description }}
+
+                        </p>
+
+
+                        <!-- Date + Buttons -->
+
+                        <div class="d-flex justify-content-between align-items-center">
+
+                            <small class="text-muted">
+
+                                {{ event.start_date|date:"M d, Y" }}
+
+                            </small>
+
+
+                            <div class="d-flex gap-2">
+
+                                <!-- Details -->
+
+                                <a
+                                    href="{% url 'event_details' event.id %}"
+                                    class="btn btn-sm btn-outline-primary">
+
+                                    Details
+
+                                </a>
+
+
+                                <!-- Registration -->
+
+                                {% if event.status == "Completed" %}
+
+                                    <button
+                                        type="button"
+                                        class="btn btn-sm btn-secondary"
+                                        disabled>
+
+                                        <i class="bi bi-check-circle me-1"></i>
+
+                                        Completed
+
+                                    </button>
+
+
+                                {% elif event.status == "Cancelled" %}
+
+                                    <button
+                                        type="button"
+                                        class="btn btn-sm btn-danger"
+                                        disabled>
+
+                                        <i class="bi bi-x-circle me-1"></i>
+
+                                        Cancelled
+
+                                    </button>
+
+
+                                {% else %}
+
+                                    <a
+                                        href="{% url 'register_event' event.id %}"
+                                        class="btn btn-sm btn-success">
+
+                                        <i class="bi bi-person-plus me-1"></i>
+
+                                        Register
+
+                                    </a>
+
+                                {% endif %}
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            {% endfor %}
+
+        </div>
+
+
+        <!-- See All Events -->
+
+        <div class="text-center mt-4">
+
+            <a
+                href="{% url 'event_list' %}"
+                class="btn btn-primary btn-lg">
+
+                <i class="bi bi-eye me-2"></i>
+
+                See All Events
+
+            </a>
+
+        </div>
+
+
+    {% else %}
+
+        <div class="alert alert-warning" role="alert">
+
+            <i class="bi bi-exclamation-triangle me-2"></i>
+
+            No events matching your filters.
+
+            <a href="?">
+                Clear filters
+            </a>
+
+        </div>
+
+    {% endif %}
+
+</div>
+
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+{% include 'chatbot.html' %}
+
+</body>
+
+</html>

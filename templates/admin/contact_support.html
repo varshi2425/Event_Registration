@@ -1,0 +1,73 @@
+{% extends 'admin/admin_dashboard.html' %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+    <h2>Contact Support</h2>
+
+    <h5 class="mt-3">
+        Total Requests: {{ requests|length }}
+    </h5>
+
+
+    <div class="card shadow mt-4">
+
+        <div class="card-body">
+
+            <table class="table table-bordered">
+
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Subject</th>
+                        <th>Message</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+
+
+                <tbody>
+
+                {% for request in requests %}
+
+                    <tr>
+
+                        <td>{{ request.name }}</td>
+
+                        <td>{{ request.email }}</td>
+
+                        <td>{{ request.subject }}</td>
+
+                        <td>{{ request.message }}</td>
+
+                        <td>{{ request.status }}</td>
+
+                    </tr>
+
+
+                {% empty %}
+
+                    <tr>
+                        <td colspan="5" class="text-center">
+                            No Support Requests Found
+                        </td>
+                    </tr>
+
+                {% endfor %}
+
+
+                </tbody>
+
+            </table>
+
+
+        </div>
+
+    </div>
+
+
+</div>
+
+{% endblock %}

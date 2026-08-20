@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Edit Event</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+        <link href="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.css" rel="stylesheet">
+        <style>
+            #bannerEditor { display: none; overflow: hidden; max-height: 360px; background: #eef1f5; border-radius: 10px; }
+            #bannerPreview { display: block; max-width: 100%; }
+            .banner-tools { display: none; }
+        </style>
+
+</head>
+
+
+<body class="bg-light">
+
+
+<div class="container mt-5">
+
+
+    <div class="card shadow">
+
+
+        <div class="card-header bg-warning">
+
+            <h3 class="mb-0">
+                Edit Event
+            </h3>
+
+        </div>
+
+
+        <div class="card-body">
+
+
+            {% if form.errors %}
+
+            <div class="alert alert-danger">
+
+                {{ form.errors }}
+
+            </div>
+
+            {% endif %}
+
+
+
+            <form method="POST" enctype="multipart/form-data">
+
+                {% csrf_token %}
+
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        Event Name
+                    </label>
+
+                    {{ form.event_name }}
+
+                </div>
+
+
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        Event Code
+                    </label>
+
+                    {{ form.event_code }}
+
+                </div>
+
+
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        Category
+                    </label>
+
+                    {{ form.category }}
+
+                </div>
+
+
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        Description
+                    </label>
+
+                    {{ form.description }}
+
+                </div>
+
+
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        Venue
+                    </label>
+
+                    {{ form.venue }}
+
+                </div>
+
+
+
+                <div class="row">
+
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+                            Start Date
+                        </label>
+
+                        {{ form.start_date }}
+
+                    </div>
+
+
+
+                    <div class="col-md-6 mb-3">
+
+                        <label class="form-label">
+                            End Date
+                        </label>
+
+                        {{ form.end_date }}
+
+                    </div>
+
+
+                </div>
+
+
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        Maximum Participants
+                    </label>
+
+                    {{ form.max_participants }}
+
+                </div>
+
+
+
+                <div class="mb-3">
+
+                    <label class="form-label">
+                        Status
+                    </label>
+
+                    {{ form.status }}
+
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold" for="id_banner">Event Banner</label>
+                    {% if event.banner %}
+                        <div class="mb-2">
+                            <img src="{{ event.banner.url }}"
+                                 alt="Current banner for {{ event.event_name }}"
+                                 class="img-fluid rounded border"
+                                 style="max-height:160px; object-fit:cover;">
+                        </div>
+                        <p class="small text-muted mb-2">Choose a new image to replace the current banner, or use the clear option to remove it.</p>
+                    {% else %}
+                        <p class="small text-muted mb-2">No banner uploaded. Choose an image to add one.</p>
+                    {% endif %}
+                    {{ form.banner }}
+                        <div id="bannerEditor" class="mt-3">
+                            <img id="bannerPreview" alt="Selected banner preview">
+                        </div>
+                        <div id="bannerTools" class="banner-tools row g-2 mt-2">
+                            <div class="col-md-4">
+                                <label class="form-label small" for="bannerAspect">Crop ratio</label>
+                                <select id="bannerAspect" class="form-select form-select-sm">
+                                    <option value="NaN">Free crop</option>
+                                    <option value="1.7777778" selected>Wide 16:9</option>
+                                    <option value="1.3333333">Standard 4:3</option>
+                                    <option value="1">Square 1:1</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3"><label class="form-label small" for="bannerWidth">Width</label><input id="bannerWidth" class="form-control form-control-sm" type="number" min="320" max="2400" value="1200"></div>
+                            <div class="col-md-3"><label class="form-label small" for="bannerHeight">Height</label><input id="bannerHeight" class="form-control form-control-sm" type="number" min="180" max="2400" value="675"></div>
+                            <div class="col-md-2 d-flex align-items-end"><button id="applyBannerEdit" class="btn btn-primary btn-sm w-100" type="button">Apply</button></div>
+                        </div>
+                        <div id="bannerEditStatus" class="small text-success mt-2" aria-live="polite"></div>
+                </div>
+
+
+
+                <button type="submit" class="btn btn-success">
+
+                    Update Event
+
+                </button>
+
+
+
+                <a href="{% url 'event_list' %}" 
+                   class="btn btn-secondary">
+
+                    Back
+
+                </a>
+
+
+            </form>
+
+
+        </div>
+
+
+    </div>
+
+
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.js"></script>
+<script>
+    (function () {
+        const input = document.getElementById("id_banner");
+        const editor = document.getElementById("bannerEditor");
+        const preview = document.getElementById("bannerPreview");
+        const tools = document.getElementById("bannerTools");
+        const aspect = document.getElementById("bannerAspect");
+        const width = document.getElementById("bannerWidth");
+        const height = document.getElementById("bannerHeight");
+        const apply = document.getElementById("applyBannerEdit");
+        const status = document.getElementById("bannerEditStatus");
+        let cropper;
+
+        input.addEventListener("change", function () {
+            const file = input.files[0];
+            if (!file) return;
+            if (cropper) cropper.destroy();
+            preview.src = URL.createObjectURL(file);
+            editor.style.display = "block";
+            tools.style.display = "flex";
+            status.textContent = "Adjust the crop, then apply the resize.";
+            cropper = new Cropper(preview, {
+                viewMode: 1,
+                autoCropArea: .9,
+                responsive: true,
+                background: false,
+                aspectRatio: Number(aspect.value),
+            });
+        });
+
+        aspect.addEventListener("change", function () {
+            if (cropper) cropper.setAspectRatio(Number(aspect.value));
+        });
+
+        apply.addEventListener("click", function () {
+            if (!cropper) return;
+            const outputWidth = Math.max(320, Math.min(2400, Number(width.value) || 1200));
+            const outputHeight = Math.max(180, Math.min(2400, Number(height.value) || 675));
+            const canvas = cropper.getCroppedCanvas({
+                width: outputWidth,
+                height: outputHeight,
+                imageSmoothingEnabled: true,
+                imageSmoothingQuality: "high",
+            });
+
+            canvas.toBlob(function (blob) {
+                const original = input.files[0];
+                const filename = (original.name.replace(/\.[^.]+$/, "") || "event-banner") + ".jpg";
+                const editedFile = new File([blob], filename, { type: "image/jpeg" });
+                const transfer = new DataTransfer();
+                transfer.items.add(editedFile);
+                input.files = transfer.files;
+                preview.src = URL.createObjectURL(blob);
+                status.textContent = "Banner crop and resize applied.";
+            }, "image/jpeg", .9);
+        });
+    })();
+</script>
+</body>
+
+</html>

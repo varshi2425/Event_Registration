@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>QR Scanner</title>
+
+    <script src="https://unpkg.com/html5-qrcode"
+            type="text/javascript">
+    </script>
+
+    <style>
+
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f7fb;
+            margin: 0;
+            padding: 30px;
+        }
+
+        .scanner-container {
+            max-width: 600px;
+            margin: auto;
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .description {
+            text-align: center;
+            color: #666;
+            margin-bottom: 25px;
+        }
+
+        #reader {
+            width: 100%;
+        }
+
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            display: none;
+        }
+
+        .success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+<div class="scanner-container">
+
+    <h1>QR Scanner</h1>
+
+    <p class="description">
+        Scan a registered member's QR code
+    </p>
+
+    <div id="reader"></div>
+
+    <div id="result"></div>
+
+</div>
+
+
+<script>
+
+function showResult(message, type) {
+
+    const result = document.getElementById("result");
+
+    result.innerHTML = message;
+
+    result.className = type;
+
+    result.style.display = "block";
+}
+
+
+function onScanSuccess(decodedText, decodedResult) {
+
+    console.log("QR Code:", decodedText);
+
+    showResult(
+        "QR code detected. Processing...",
+        "success"
+    );
+    try {
+        const scannedUrl = new URL(decodedText, window.location.origin);
+
+        if (scannedUrl.origin !== window.location.origin) {
+            throw new Error("Unexpected QR destination");
+        }
+
+        window.location.href = scannedUrl.href;
+    } catch (error) {
+        showResult(
+            "This QR code is not a valid check-in code.",
+            "error"
+        );
+    }
+
+}
+    
+
+function onScanFailure(error) {
+
+    // Ignore continuous scanning errors.
+}
+
+
+const html5QrcodeScanner =
+    new Html5QrcodeScanner(
+        "reader",
+        {
+            fps: 10,
+            qrbox: {
+                width: 250,
+                height: 250
+            }
+        },
+        false
+    );
+
+
+html5QrcodeScanner.render(
+    onScanSuccess,
+    onScanFailure
+);
+
+</script>
+
+</body>
+
+</html>

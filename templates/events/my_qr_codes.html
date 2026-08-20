@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>My QR Codes</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <style>
+        .qr-image { width: 220px; height: 220px; object-fit: contain; }
+    </style>
+</head>
+<body class="bg-light">
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="h3 mb-1"><i class="bi bi-qr-code me-2"></i>My QR Codes</h1>
+            <p class="text-muted mb-0">Show the QR code for your registered event at check-in.</p>
+        </div>
+        <a href="{% url 'user_dashboard' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left me-1"></i>Dashboard
+        </a>
+    </div>
+
+    <div class="row g-4">
+        {% for registration in registrations %}
+        <div class="col-md-6 col-lg-4">
+            <article class="card h-100 border-0 shadow-sm text-center">
+                <div class="card-body">
+                    {% if registration.qr_code %}
+                        <img class="qr-image mb-3" src="{{ registration.qr_code.url }}" alt="QR code for {{ registration.event.event_name }}">
+                        <div class="d-grid gap-2">
+                            <a class="btn btn-primary" href="{{ registration.qr_code.url }}" target="_blank" rel="noopener">
+                                <i class="bi bi-arrows-fullscreen me-1"></i>View QR Code
+                            </a>
+                            <a class="btn btn-outline-primary" href="{{ registration.qr_code.url }}" download>
+                                <i class="bi bi-download me-1"></i>Download QR Code
+                            </a>
+                        </div>
+                    {% else %}
+                        <div class="py-5 text-muted">
+                            <i class="bi bi-hourglass-split fs-1"></i>
+                            <p class="mt-3 mb-0">QR code is being generated.</p>
+                        </div>
+                    {% endif %}
+                    <hr>
+                    <h2 class="h5">{{ registration.event.event_name }}</h2>
+                    <p class="small mb-1"><strong>{{ registration.member_name }}</strong></p>
+                    <p class="small text-muted mb-1">{{ registration.event.venue }}</p>
+                    <p class="small text-muted mb-0">{{ registration.event.start_date|date:"d M Y" }}</p>
+                    {% if registration.is_checked_in %}
+                        <span class="badge text-bg-success mt-3"><i class="bi bi-check-circle me-1"></i>Checked in</span>
+                    {% else %}
+                        <span class="badge text-bg-warning mt-3">Not checked in</span>
+                    {% endif %}
+                </div>
+            </article>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info">
+                You do not have any event registrations yet. Browse the Events page to register.
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% include 'chatbot.html' %}
+</body>
+</html>

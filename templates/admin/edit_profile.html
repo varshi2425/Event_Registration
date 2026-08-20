@@ -1,0 +1,340 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Edit Profile</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+
+<style>
+
+body{
+    background: white;
+    min-height: 100vh;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    padding: 40px 20px;
+}
+
+.edit-container {
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+.edit-card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 15px 35px rgba(0,0,0,.2);
+    overflow: hidden;
+    background: white;
+}
+
+.edit-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 30px;
+    border-bottom: none;
+}
+
+.edit-header h3 {
+    margin: 0;
+    font-weight: 700;
+}
+
+.edit-body {
+    padding: 40px 30px;
+}
+
+.form-section {
+    margin-bottom: 35px;
+}
+
+.form-section:last-of-type {
+    margin-bottom: 0;
+}
+
+.section-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #667eea;
+    display: flex;
+    align-items: center;
+}
+
+.section-title i {
+    margin-right: 10px;
+    color: #667eea;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-label {
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 8px;
+    font-size: 0.95rem;
+}
+
+.form-control, .form-control:focus {
+    border: 2px solid #ecf0f1;
+    border-radius: 8px;
+    padding: 10px 15px;
+    font-size: 1rem;
+}
+
+.form-control:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.15);
+}
+
+.form-control::placeholder {
+    color: #bdc3c7;
+}
+
+textarea.form-control {
+    resize: vertical;
+    min-height: auto;
+}
+
+textarea.form-control[rows="2"] {
+    height: 70px;
+}
+
+.form-text {
+    color: #7f8c8d;
+    font-size: 0.85rem;
+    margin-top: 5px;
+}
+
+.profile-picture-preview {
+    margin-top: 15px;
+    padding: 15px;
+    background: #ecf0f1;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.profile-picture-preview img {
+    max-width: 150px;
+    max-height: 150px;
+    border-radius: 8px;
+    border: 3px solid #667eea;
+}
+
+.button-group {
+    display: flex;
+    gap: 15px;
+    margin-top: 30px;
+    padding-top: 30px;
+    border-top: 2px solid #ecf0f1;
+}
+
+.button-group .btn {
+    flex: 1;
+    padding: 12px 30px;
+    font-weight: 600;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+    border: none;
+}
+
+.button-group .btn-success {
+    background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+    color: white;
+}
+
+.button-group .btn-success:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 20px rgba(46, 204, 113, 0.3);
+    color: white;
+}
+
+.button-group .btn-secondary {
+    background: #ecf0f1;
+    color: #2c3e50;
+}
+
+.button-group .btn-secondary:hover {
+    background: #bdc3c7;
+    color: #2c3e50;
+}
+
+.error-message {
+    color: #e74c3c;
+    font-size: 0.85rem;
+    margin-top: 5px;
+}
+
+ul.errorlist {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+ul.errorlist li {
+    color: #e74c3c;
+    font-size: 0.85rem;
+    margin-bottom: 5px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="edit-container">
+
+<div class="card edit-card">
+
+<div class="edit-header">
+
+<h3><i class="bi bi-pencil-square me-2"></i>Edit Your Profile</h3>
+
+</div>
+
+<div class="edit-body">
+
+<form method="POST" enctype="multipart/form-data" novalidate>
+
+{% csrf_token %}
+
+<!-- User Information Section -->
+<div class="form-section">
+
+<div class="section-title">
+<i class="bi bi-person-fill"></i>
+Personal Information
+</div>
+
+<div class="row">
+<div class="col-md-6">
+<div class="form-group">
+<label for="id_first_name" class="form-label">First Name</label>
+{{ user_form.first_name }}
+{% if user_form.first_name.errors %}
+<div class="error-message">{{ user_form.first_name.errors.0 }}</div>
+{% endif %}
+</div>
+</div>
+<div class="col-md-6">
+<div class="form-group">
+<label for="id_last_name" class="form-label">Last Name</label>
+{{ user_form.last_name }}
+{% if user_form.last_name.errors %}
+<div class="error-message">{{ user_form.last_name.errors.0 }}</div>
+{% endif %}
+</div>
+</div>
+</div>
+
+<div class="form-group">
+<label for="id_username" class="form-label">Username</label>
+{{ user_form.username }}
+{% if user_form.username.errors %}
+<div class="error-message">{{ user_form.username.errors.0 }}</div>
+{% endif %}
+</div>
+
+</div>
+
+<!-- Contact Information Section -->
+<div class="form-section">
+
+<div class="section-title">
+<i class="bi bi-envelope-fill"></i>
+Contact Information
+</div>
+
+<div class="form-group">
+<label for="id_email" class="form-label">Email Address</label>
+{{ user_form.email }}
+{% if user_form.email.errors %}
+<div class="error-message">{{ user_form.email.errors.0 }}</div>
+{% endif %}
+</div>
+
+<div class="form-group">
+<label for="id_phone" class="form-label">Phone Number</label>
+{{ profile_form.phone }}
+{% if profile_form.phone.errors %}
+<div class="error-message">{{ profile_form.phone.errors.0 }}</div>
+{% endif %}
+<small class="form-text">Format: +1 (555) 000-0000</small>
+</div>
+
+</div>
+
+<!-- Address Information Section -->
+<div class="form-section">
+
+<div class="section-title">
+<i class="bi bi-geo-alt"></i>
+Address
+</div>
+
+<div class="form-group">
+<label for="id_address" class="form-label">Address</label>
+<textarea name="address" class="form-control" rows="2" placeholder="Enter your complete address">{{ profile_form.address.value|default:"" }}</textarea>
+{% if profile_form.address.errors %}
+<div class="error-message">{{ profile_form.address.errors.0 }}</div>
+{% endif %}
+<small class="form-text">Enter your complete address (Street, City, State, ZIP)</small>
+</div>
+</div>
+
+<!-- Profile Picture Section -->
+<div class="form-section">
+
+<div class="section-title">
+<i class="bi bi-image"></i>
+Profile Picture
+</div>
+
+<div class="form-group">
+<label for="id_profile_picture" class="form-label">Change Profile Picture</label>
+{{ profile_form.profile_picture }}
+{% if profile_form.profile_picture.errors %}
+<div class="error-message">{{ profile_form.profile_picture.errors.0 }}</div>
+{% endif %}
+<small class="form-text">Recommended size: 300x300px. Max file size: 5MB</small>
+</div>
+
+</div>
+
+<!-- Buttons -->
+<div class="button-group">
+
+<button type="submit" class="btn btn-success">
+<i class="bi bi-check-circle me-2"></i>
+Save Changes
+</button>
+
+<a href="{% url 'admin_dashboard' %}" class="btn btn-secondary">
+    <i class="bi bi-house-door me-2"></i>
+    Back to Dashboard
+</a>
+
+</div>
+
+</form>
+
+</div>
+
+</div>
+
+</div>
+
+</body>
+
+</html>

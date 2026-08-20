@@ -1,0 +1,1562 @@
+<!DOCTYPE html>
+<html lang="en">
+{% load static %}
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.css" rel="stylesheet">
+  <style>
+
+body{
+    background:#f5f6fa;
+    overflow-x:hidden;
+}
+
+/* ===========================
+   Sidebar
+=========================== */
+
+.sidebar{
+    position:fixed;
+    top:0;
+    left:0;
+    width:250px;
+    height:100vh;
+    color:white;
+    transition:all .3s ease;
+    overflow:hidden;
+    z-index:1000;
+}
+
+.main{
+    position:relative;
+    z-index:1;
+}
+
+/* Collapsed Sidebar */
+
+.sidebar.collapsed{
+    width:80px;
+    overflow:visible;
+}
+
+/* Links */
+
+.sidebar a{
+    display:flex;
+    align-items:center;
+    color:white;
+    text-decoration:none;
+    padding:15px 25px;
+    transition:.3s;
+    white-space:nowrap;
+}
+
+.sidebar a:hover{
+    background:rgba(255,255,255,.15);
+}
+
+/* Icons */
+
+.sidebar a i{
+    font-size:20px;
+    min-width:30px;
+    text-align:center;
+}
+
+/* Hide Menu Text */
+
+.sidebar span{
+    transition:.2s;
+}
+
+.sidebar.collapsed span{
+    display:none;
+}
+
+/* Center Icons */
+
+.sidebar.collapsed a{
+    justify-content:center;
+    padding:15px 0;
+}
+
+.sidebar.collapsed a i{
+    margin-right:0 !important;
+    font-size:22px;
+}
+
+/* ===========================
+   Profile Section
+=========================== */
+
+.profile-section{
+    padding:25px 15px;
+    text-align:center;
+}
+
+.profile-img{
+    width:80px;
+    height:80px;
+    border-radius:50%;
+    object-fit:cover;
+    transition:.3s;
+}
+
+.profile-section h4,
+.profile-section h5{
+    transition:.2s;
+}
+
+/* Collapse Profile */
+
+.sidebar.collapsed .profile-img{
+    width:50px;
+    height:50px;
+}
+
+.sidebar.collapsed .profile-section h4,
+.sidebar.collapsed .profile-section h5{
+    display:none;
+}
+
+/* ===========================
+   Main Content
+=========================== */
+
+.main{
+    margin-left:250px;
+    transition:.3s ease;
+    min-height:100vh;
+}
+
+.main.expanded{
+    margin-left:80px;
+}
+
+/* ===========================
+   Topbar
+=========================== */
+
+.topbar{
+    padding:15px 30px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    background:#fff;
+    box-shadow:0 2px 10px rgba(0,0,0,.08);
+}
+
+.topbar-icon{
+    width:42px;
+    height:42px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border:none;
+    transition:.3s;
+    color:white;
+    font-size:18px;
+}
+
+.topbar-icon:hover{
+    transform:translateY(-2px);
+    box-shadow:0 8px 18px rgba(0,0,0,.18);
+}
+
+.notification-btn{
+    background:#ff9800;
+}
+
+.calendar-btn{
+    background:#0d6efd;
+}
+
+.settings-btn{
+    background:#6f42c1;
+}
+/* ===========================
+   Cards
+=========================== */
+
+.cards{
+    padding:30px;
+}
+
+.card{
+    border:none;
+    border-radius:16px;
+    box-shadow:0 6px 18px rgba(0,0,0,.08);
+    transition:transform .2s ease, box-shadow .2s ease;
+}
+
+.card:hover{
+    transform:translateY(-5px);
+    box-shadow:0 12px 26px rgba(0,0,0,.15);
+}
+
+.chart-card:hover{
+    transform:none;
+    box-shadow:0 6px 18px rgba(0,0,0,.08);
+}
+
+@media (prefers-reduced-motion: reduce){
+    .card{
+        transition:none;
+    }
+
+    .card:hover{
+        transform:none;
+    }
+}
+
+.icon{
+    font-size:45px;
+}
+
+.profile{
+    display:flex;
+    align-items:center;
+    gap:10px;
+}
+
+/* ===========================
+   Font Sizes
+=========================== */
+
+.small-font{
+    font-size:14px;
+}
+
+.medium-font{
+    font-size:16px;
+}
+
+.large-font{
+    font-size:18px;
+}
+
+/* ===========================
+   Customization Panel
+=========================== */
+
+.custom-panel{
+    position:fixed;
+    top:0;
+    right:-420px;
+    width:420px;
+    height:100vh;
+    background:#f8f9fa;
+    box-shadow:-8px 0 25px rgba(0,0,0,.15);
+    transition:right .35s ease;
+    z-index:9999;
+    overflow-y:auto;
+}
+
+.custom-panel.open{
+    right:0;
+}
+
+.panel-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:20px;
+    background:#0d6efd;
+    color:white;
+}
+
+.panel-body{
+    padding:20px;
+}
+
+.close-btn{
+    font-size:28px;
+    cursor:pointer;
+}
+
+/* ===========================
+   Overlay
+=========================== */
+
+.overlay{
+    position:fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background:rgba(0,0,0,.3);
+    display:none;
+    z-index:9998;
+}
+
+.overlay.show{
+    display:block;
+}
+
+/* ===========================
+   Welcome Card
+=========================== */
+
+.welcome-card{
+    border-radius:18px;
+    background:#f5f6fa;
+}
+
+.welcome-card p{
+    color:#555 !important;
+}
+
+.welcome-card .btn{
+    border-radius:10px;
+}
+
+/* ===========================
+   Footer
+=========================== */
+
+.footer{
+    background:#fff;
+    border-top:1px solid #dee2e6;
+    color:#6c757d;
+    font-size:14px;
+}
+
+/* ===========================
+   Settings Panel Cards
+=========================== */
+
+.setting-box{
+    background:#fff;
+    border-radius:15px;
+    padding:18px;
+    box-shadow:0 5px 15px rgba(0,0,0,.05);
+    transition:.3s;
+}
+
+.setting-box:hover{
+    transform:translateY(-2px);
+    box-shadow:0 12px 25px rgba(0,0,0,.08);
+}
+
+.section-title{
+    font-size:13px;
+    text-transform:uppercase;
+    color:#6c757d;
+    font-weight:700;
+    margin-bottom:18px;
+}
+
+.preview-box{
+    height:35px;
+    border-radius:8px;
+    border:1px solid #dee2e6;
+}
+
+.custom-panel input,
+.custom-panel select{
+    border-radius:10px;
+    min-height:45px;
+}
+
+.custom-panel input:focus,
+.custom-panel select:focus{
+    box-shadow:0 0 0 .2rem rgba(13,110,253,.15);
+}
+
+/* ===========================
+   Sidebar Search
+=========================== */
+
+.sidebar-search{
+
+    display:flex;
+    align-items:center;
+
+    margin:15px;
+
+    background:rgba(255,255,255,.12);
+
+    border-radius:10px;
+
+    overflow:hidden;
+
+    transition:.3s;
+    position:relative;
+
+}
+
+.sidebar-search i{
+
+    color:white;
+
+    padding:12px;
+
+    cursor:pointer;
+
+    font-size:18px;
+
+}
+
+.sidebar-search i:focus-visible{
+    outline:2px solid #fff;
+    outline-offset:2px;
+}
+
+.sidebar-search input{
+
+    flex:1;
+
+    border:none;
+
+    outline:none;
+
+    background:transparent;
+
+    color:white;
+
+    padding:10px;
+
+}
+
+.sidebar-search input::placeholder{
+
+    color:#ddd;
+
+}
+
+/* Collapsed Sidebar */
+
+.sidebar.collapsed .sidebar-search{
+
+    display:none;
+
+}
+
+.sidebar.collapsed .sidebar-search input{
+
+    width:0;
+
+    padding:0;
+
+    opacity:0;
+
+}
+
+.sidebar.collapsed .sidebar-search.search-open input{
+    position:absolute;
+    left:58px;
+    top:0;
+    width:190px;
+    height:42px;
+    padding:10px;
+    opacity:1;
+    background:#343a40;
+    border-radius:10px;
+    box-shadow:0 8px 20px rgba(0,0,0,.2);
+}
+
+.sidebar-search-results{
+    display:none;
+}
+
+.sidebar.collapsed .sidebar-search.search-open .sidebar-search-results{
+    position:absolute;
+    top:48px;
+    left:58px;
+    display:block;
+    width:220px;
+    max-height:260px;
+    overflow-y:auto;
+    padding:6px;
+    background:#fff;
+    border-radius:10px;
+    box-shadow:0 8px 20px rgba(0,0,0,.2);
+    z-index:1100;
+}
+
+.sidebar-search-results a{
+    display:block;
+    padding:9px 10px;
+    color:#343a40;
+    border-radius:7px;
+    text-decoration:none;
+    white-space:normal;
+}
+
+.sidebar-search-results a:hover{
+    background:#eef5ff;
+    color:#0d6efd;
+}
+
+/* Calendar Modal */
+
+#calendar{
+
+    width:100%;
+
+}
+
+.modal-xl{
+
+    max-width:1000px;
+
+}
+
+.fc-toolbar-title{
+
+    font-size:22px;
+
+    font-weight:700;
+
+}
+
+.fc-daygrid-day-frame{
+
+    min-height:75px;
+
+}
+
+.fc-day-today{
+
+    background:#eef5ff !important;
+
+}
+
+.fc-day-today .fc-daygrid-day-number{
+
+    background:#0d6efd;
+
+    color:white !important;
+
+    border-radius:50%;
+
+    width:28px;
+
+    height:28px;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    margin:4px;
+
+}
+.color-circle{
+
+display:block;
+
+width:32px;
+
+height:32px;
+
+border-radius:50%;
+
+cursor:pointer;
+
+border:3px solid transparent;
+
+transition:.25s;
+
+}
+
+input[type=radio]:checked + .color-circle{
+
+border-color:#000;
+
+transform:scale(1.12);
+
+}
+
+.btn-group .btn{
+
+font-weight:600;
+
+}
+
+.panel-body{
+
+padding:25px;
+
+}
+
+.panel-body label{
+
+font-weight:600;
+
+}
+
+.panel-body input[type=text]{
+
+border-radius:10px;
+
+}
+
+.panel-body select{
+
+border-radius:10px;
+
+}
+.form-control-color{
+    width:70px;
+    height:50px;
+    border:none;
+    border-radius:15px;
+    cursor:pointer;
+    background:none;
+    padding:0;
+}
+
+.form-control-color::-webkit-color-swatch{
+    border:none;
+    border-radius:15px;
+}
+
+.form-control-color::-webkit-color-swatch-wrapper{
+    padding:0;
+}
+
+.btn-danger{
+    transition:all .3s ease;
+    font-weight:600;
+}
+.btn-primary{
+    transition:all .3s ease;
+    font-weight:600;
+}
+
+.btn-danger:hover{
+    background:#bb2d3b;
+    border-color:#bb2d3b;
+    transform:translateY(-2px);
+    box-shadow:0 6px 15px rgba(220,53,69,.25);
+}
+
+.btn-primary:hover{
+    transform:translateY(-2px);
+    box-shadow:0 8px 20px rgba(13,110,253,.25);
+}
+
+.btn-outline-secondary{
+    transition:0.3s;
+}
+
+.btn-outline-secondary:hover{
+    background:#f8f9fa;
+    transform:translateY(-2px);
+}
+
+</style>
+</head>
+
+<body
+class="
+{% if customization.theme == 'dark' %}bg-dark text-white{% endif %}
+{% if customization.font_size == 'small' %}small-font{% endif %}
+{% if customization.font_size == 'medium' %}medium-font{% endif %}
+{% if customization.font_size == 'large' %}large-font{% endif %}
+">
+
+<div class="card border-0 shadow-lg mb-4 welcome-card">
+    <div class="card-body p-4 text-center">
+
+        <h2 class="fw-bold mb-2">
+            👋 Welcome Back, Admin!
+        </h2>
+
+        <p class="text-muted mb-3">
+            Manage events, categories, members, support requests, and notifications from one place.
+        </p>
+
+    </div>
+</div>
+<!-- Sidebar -->
+
+<div class="sidebar"
+     style="background-color: {{ customization.sidebar_color|default:'#3d4044' }};">
+
+    <div class="profile-section text-center">
+
+        <img src="{% static 'images/default.jpeg' %}"
+             class="profile-img"
+             alt="Profile">
+
+        <h4>{{ request.user.username }}</h4>
+        <h5>Administrator</h5>
+
+    </div>
+    <div class="sidebar-search">
+
+    <i class="bi bi-search" id="sidebarSearchToggle" role="button" tabindex="0" aria-label="Open menu search" title="Search menu"></i>
+
+    <input
+        type="text"
+        id="sidebarSearch"
+        placeholder="Search menu...">
+
+    <div id="sidebarSearchResults" class="sidebar-search-results"></div>
+
+</div>
+
+    <a href="{% url 'admin_dashboard' %}"
+   data-bs-toggle="tooltip"
+   data-bs-placement="right"
+   title="Dashboard">
+
+    <i class="bi bi-speedometer2 me-2"></i>
+    <span>Dashboard</span>
+
+</a>
+
+    <a href="{% url 'category_list' %}"
+   data-bs-toggle="tooltip"
+   data-bs-placement="right"
+   title="Categories">
+
+    <i class="bi bi-folder me-2"></i>
+    <span>Categories</span>
+
+</a>
+
+    <a href="{% url 'event_list' %}"
+   data-bs-toggle="tooltip"
+   data-bs-placement="right"
+   title="Events">
+        <i class="bi bi-calendar-event"></i> 
+        <span>Events</span>
+    </a>
+
+    <a href="{% url 'qr_scanner_home' %}"
+   data-bs-toggle="tooltip"
+   data-bs-placement="right"
+   title="QR Scanner">
+    <i class="bi bi-qr-code-scan"></i>
+    <span>QR Scanner</span>
+</a>
+
+    <a href="{% url 'member_list' %}"
+   data-bs-toggle="tooltip"
+   data-bs-placement="right"
+   title="Members">
+        <i class="bi bi-people"></i> 
+        <span>Members</span>
+    </a>
+
+    <a href="{% url 'feedback_list' %}"
+   data-bs-toggle="tooltip"
+   data-bs-placement="right"
+   title="User Feedback">
+        <i class="bi bi-chat-square-text"></i>
+        <span>User Feedback</span>
+    </a>
+
+    <hr>
+
+    <a href="{% url 'profile' %}"
+   data-bs-toggle="tooltip"
+   data-bs-placement="right"
+   title="My Profile">
+        <i class="bi bi-person-circle"></i> 
+        <span>My Profile</span>
+    </a>
+
+    <a href="{% url 'contact_support' %}"
+   data-bs-toggle="tooltip"
+   data-bs-placement="right"
+   title="Contact Support">
+        <i class="bi bi-headset"></i> 
+        <span>Contact Support</span>
+    </a>
+
+    <a href="{% url 'logout' %}"
+   data-bs-toggle="tooltip"
+   data-bs-placement="right"
+   title="Logout">
+        <i class="bi bi-box-arrow-right"></i> 
+        <span>Logout</span>
+    </a>
+
+</div>
+
+<!-- Main -->
+
+<div class="main">
+
+    <!-- Topbar -->
+
+    <div class="topbar"
+         style="background-color: {{ customization.topbar_color|default:'#ffffff' }};">
+        <button class="btn btn-light me-2" id="toggleSidebar">
+    <i class="bi bi-list fs-4"></i>
+</button>
+        <h3>
+            {% if customization %}
+                {{ customization.dashboard_title }}
+            {% else %}
+                Admin Dashboard
+            {% endif %}
+        </h3>
+
+        <div class="d-flex align-items-center gap-3">
+
+
+    <!-- Profile -->
+    <div class="profile">
+
+        {% if profile.profile_picture and profile.profile_picture.name != 'profile_pictures/default.png' %}
+            <img src="{{ profile.profile_picture.url }}"
+                 width="45"
+                 height="45"
+                 class="rounded-circle object-fit-cover"
+                 alt="Profile Picture">
+        {% else %}
+            <img src="{% static 'images/default.jpeg' %}"
+                 width="45"
+                 height="45"
+                 class="rounded-circle object-fit-cover"
+                 alt="Default Profile Picture">
+        {% endif %}
+
+        <strong>{{ request.user.username }}</strong>
+
+    </div>
+
+    <!-- Notification Bell -->
+    <div class="dropdown">
+
+        <button
+            class="topbar-icon notification-btn position-relative"
+            data-bs-toggle="dropdown"
+            id="notificationBell">
+        
+             <i class="bi bi-bell-fill"></i>
+             
+            {% if unread_count > 0 %}
+            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                {{ unread_count }}
+            </span>
+            {% endif %}
+
+        </button>
+
+        <ul class="dropdown-menu dropdown-menu-end">
+
+    {% for notification in notifications %}
+
+    
+
+<li>
+    <a class="dropdown-item d-flex align-items-start" href="#">
+
+        <i class="bi bi-pin-angle-fill text-danger me-2"></i>
+        <div>
+            <strong>{{ notification.title }}</strong><br>
+            <small>{{ notification.message }}</small>
+        </div>
+
+    </a>
+</li>
+
+    {% empty %}
+
+        <li class="dropdown-item text-center">
+            No notifications
+        </li>
+
+    {% endfor %}
+
+    <li>
+        <hr class="dropdown-divider">
+    </li>
+
+    <li>
+        <a class="dropdown-item text-center fw-bold"
+           href="{% url 'notification_list' %}">
+            View All Notifications
+        </a>
+    </li>
+    
+
+</ul>
+
+    </div>
+    <!-- Calendar -->
+<button class="topbar-icon calendar-btn" id="calendarBtn"
+        data-bs-toggle="modal"
+        data-bs-target="#calendarModal">
+
+    <i class="bi bi-calendar3"></i>
+
+</button>
+
+    <!-- Customization -->
+    <button class="topbar-icon settings-btn" id="openPanel">
+        <i class="bi bi-gear-fill"></i>
+    </button>
+
+    
+    
+
+</div>
+
+    </div>
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-success m-3">
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endif %}
+    <!-- Cards -->
+
+    <div class="cards">
+
+        {% block content %}
+
+        <div class="row g-4">
+
+            <div class="col-md-4">
+                <div class="card shadow text-center p-4">
+                    <i class="bi bi-folder-fill text-primary icon"></i>
+                    <h2>{{ category_count }}</h2>
+                    <h5>Categories</h5>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card shadow text-center p-4">
+                    <i class="bi bi-calendar-event-fill text-success icon"></i>
+                    <h2>{{ event_count }}</h2>
+                    <h5>Events</h5>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card shadow text-center p-4">
+                    <i class="bi bi-people-fill text-danger icon"></i>
+                    <h2>{{ member_count }}</h2>
+                    <h5>Members</h5>
+                </div>
+            </div>
+
+        </div>
+
+        {% endblock %}
+
+    </div>       
+
+
+
+
+
+    <div class="card chart-card shadow border-0 rounded-4 mt-2">
+
+    <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+
+        <div>
+            <h5 class="fw-bold mb-1">
+                <i class="bi bi-bar-chart-fill text-primary"></i>
+                Members per Event
+            </h5>
+            <small class="text-muted">
+                Number of registered members in each event
+            </small>
+        </div>
+
+        <span class="badge bg-primary fs-6">
+            {{ event_count }} Events
+        </span>
+
+    </div>
+
+    <div class="card-body">
+
+        <div style="height:380px">
+            <canvas id="memberChart"></canvas>
+        </div>
+
+    </div>
+    <div class="card shadow border-0 rounded-4 mt-4">
+
+
+</div>
+
+
+
+
+<div class="overlay" id="overlay"></div>
+
+<div class="custom-panel" id="customPanel">
+
+    <div class="panel-header">
+
+    <div>
+
+        <h4 class="fw-bold mb-0">
+            Dashboard Customization
+        </h4>
+
+        <small class="text-white-50">
+            Personalize your dashboard
+        </small>
+
+    </div>
+
+    <span class="close-btn" id="closePanel">
+        &times;
+    </span>
+
+</div>
+<div class="panel-body">
+
+<form method="POST">
+
+    {% csrf_token %}
+
+    <!-- Dashboard Title -->
+
+    <div class="mb-4">
+
+        <label class="fw-semibold mb-2">
+            Dashboard Title
+        </label>
+
+        {{ form.dashboard_title }}
+
+    </div>
+
+    <!-- Theme -->
+
+    <div class="mb-4">
+
+        <label class="fw-semibold mb-2 d-block">
+            Theme
+        </label>
+
+        <input type="radio"
+               class="btn-check"
+               name="theme"
+               id="light"
+               value="light"
+               {% if customization.theme == "light" %}checked{% endif %}>
+
+        <label class="btn btn-outline-primary me-2" for="light">
+            <i class="bi bi-sun-fill"></i> Light
+        </label>
+
+        <input type="radio"
+               class="btn-check"
+               name="theme"
+               id="dark"
+               value="dark"
+               {% if customization.theme == "dark" %}checked{% endif %}>
+
+        <label class="btn btn-outline-dark" for="dark">
+            <i class="bi bi-moon-stars-fill"></i> Dark
+        </label>
+
+    </div>
+
+    <!-- Sidebar Colors -->
+    <div class="mb-4">
+
+    <label class="fw-semibold mb-2">
+        Sidebar Color
+    </label>
+
+    <input
+        type="color"
+        name="sidebar_color"
+        class="form-control form-control-color"
+        value="{{ customization.sidebar_color }}"
+        title="Choose Sidebar Color">
+
+</div>
+
+<div class="mb-4">
+
+    <label class="fw-semibold mb-2">
+        Topbar Color
+    </label>
+
+    <input
+        type="color"
+        name="topbar_color"
+        class="form-control form-control-color"
+        value="{{ customization.topbar_color }}"
+        title="Choose Topbar Color">
+
+</div>
+
+    <!-- Font Size -->
+
+    <div class="mb-4">
+
+        <label class="fw-semibold d-block mb-2">
+            Font Size
+        </label>
+
+        <input type="radio"
+               class="btn-check"
+               name="font_size"
+               id="small"
+               value="small"
+               {% if customization.font_size == "small" %}checked{% endif %}>
+
+        <label class="btn btn-outline-secondary me-2" for="small">
+            Small
+        </label>
+
+        <input type="radio"
+               class="btn-check"
+               name="font_size"
+               id="medium"
+               value="medium"
+               {% if customization.font_size == "medium" %}checked{% endif %}>
+
+        <label class="btn btn-outline-secondary me-2" for="medium">
+            Medium
+        </label>
+
+        <input type="radio"
+               class="btn-check"
+               name="font_size"
+               id="large"
+               value="large"
+               {% if customization.font_size == "large" %}checked{% endif %}>
+
+        <label class="btn btn-outline-secondary" for="large">
+            Large
+        </label>
+
+    </div>
+
+    <div class="d-flex gap-3 mt-4">
+
+    <button type="button"
+            class="btn btn-danger flex-fill rounded-3 py-2"
+            onclick="resetCustomization()">
+
+        <i class="bi bi-arrow-counterclockwise me-2"></i>
+
+        Reset to Default
+
+    </button>
+
+    <button type="submit"
+            class="btn btn-primary flex-fill rounded-3 py-2">
+
+        <i class="bi bi-save-fill me-2"></i>
+
+        Save Customization
+
+    </button>
+
+</div>
+
+</div>
+    
+
+</form>
+
+</div>
+
+</div>
+
+    </div>
+
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+
+    const panel = document.getElementById("customPanel");
+    const overlay = document.getElementById("overlay");
+
+    document.getElementById("openPanel").onclick = function () {
+        panel.classList.add("open");
+        overlay.classList.add("show");
+    };
+
+    document.getElementById("closePanel").onclick = function () {
+        panel.classList.remove("open");
+        overlay.classList.remove("show");
+    };
+
+    overlay.onclick = function () {
+        panel.classList.remove("open");
+        overlay.classList.remove("show");
+    };
+
+});
+
+</script>
+
+<script>
+setTimeout(function () {
+    const alert = document.querySelector(".alert");
+    if (alert) {
+        alert.style.transition = "opacity 0.5s";
+        alert.style.opacity = "0";
+        setTimeout(() => alert.remove(), 500);
+    }
+}, 3000);   // 3000 ms = 3 seconds
+</script>
+
+<script>
+
+document.getElementById("notificationBell").addEventListener("click", function () {
+
+    fetch("{% url 'mark_notifications_read' %}")
+    .then(response => response.json())
+    .then(data => {
+
+        const badge = document.querySelector(".badge");
+
+        if (badge) {
+            badge.remove();
+        }
+
+    });
+
+});
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+const labels = {{ event_labels|safe }};
+const counts = {{ member_counts|safe }};
+
+new Chart(document.getElementById("memberChart"), {
+    type: "bar",
+
+    data: {
+        labels: labels,
+        datasets: [{
+            label: "Members",
+            data: counts,
+            backgroundColor: [
+                "#4F46E5",
+                "#06B6D4",
+                "#10B981",
+                "#F59E0B",
+                "#EF4444",
+                "#8B5CF6",
+                "#14B8A6",
+                "#EC4899"
+            ],
+            borderRadius: 10,
+            borderSkipped: false,
+            barThickness: 45,
+             
+        }]
+    },
+
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+
+            legend: {
+                display: false
+            },
+
+            tooltip: {
+
+                backgroundColor: "#212529",
+
+                titleFont: {
+                    size: 14
+                },
+
+                bodyFont: {
+                    size: 13
+                },
+
+                padding: 12,
+
+                callbacks: {
+
+                    label: function(context){
+                        return context.parsed.y + " Members";
+                    }
+
+                }
+
+            }
+
+        },
+        scales: {
+
+            x: {
+                grid: {
+                    display: false
+                }
+            },
+
+            y: {
+
+                beginAtZero: true,
+
+                ticks: {
+                    stepSize: 1
+                },
+
+                grid: {
+                    color: "#f1f3f5"
+                }
+
+            }
+
+        },
+        animation: {
+            duration: 1800,
+            easing: "easeOutQuart"
+        }
+    }
+});
+</script>
+
+<script>
+const sidebar = document.querySelector(".sidebar");
+const main = document.querySelector(".main");
+const toggleBtn = document.getElementById("toggleSidebar");
+
+toggleBtn.addEventListener("click", function () {
+    sidebar.classList.toggle("collapsed");
+    main.classList.toggle("expanded");
+});
+</script>
+
+<script>
+
+const tooltipList = [];
+
+document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function(el){
+
+    tooltipList.push(
+        new bootstrap.Tooltip(el, {
+            trigger: "hover"
+        })
+    );
+
+});
+
+function updateTooltips(){
+
+    if(document.querySelector(".sidebar").classList.contains("collapsed")){
+
+        tooltipList.forEach(t => t.enable());
+
+    }else{
+
+        tooltipList.forEach(t => t.disable());
+
+    }
+
+}
+
+updateTooltips();
+
+document.getElementById("toggleSidebar").addEventListener("click", function(){
+
+    setTimeout(updateTooltips, 300);
+
+});
+
+</script>
+
+<script>
+
+const searchBox=document.getElementById("sidebarSearch");
+const searchToggle=document.getElementById("sidebarSearchToggle");
+const searchContainer=document.querySelector(".sidebar-search");
+const searchResults=document.getElementById("sidebarSearchResults");
+
+function openSidebarSearch(){
+    searchContainer.classList.add("search-open");
+    searchBox.focus();
+}
+
+searchToggle.addEventListener("click", openSidebarSearch);
+
+searchToggle.addEventListener("keydown", function(event){
+    if(event.key === "Enter" || event.key === " "){
+        event.preventDefault();
+        openSidebarSearch();
+    }
+});
+
+searchBox.addEventListener("focus",function(){
+
+    searchContainer.classList.add("search-open");
+
+});
+
+</script>
+<script>
+
+const menuItems=document.querySelectorAll(".sidebar a");
+
+searchBox.addEventListener("keyup",function(){
+
+    let value=this.value.toLowerCase();
+
+    if(sidebar.classList.contains("collapsed")){
+        searchResults.innerHTML="";
+
+        if(!value){
+            searchResults.style.display="none";
+            return;
+        }
+
+        let matches=0;
+
+        menuItems.forEach(function(item){
+            let text=item.innerText.trim();
+
+            if(text.toLowerCase().includes(value)){
+                const result=document.createElement("a");
+                result.href=item.href;
+                result.textContent=text;
+                searchResults.appendChild(result);
+                matches++;
+            }
+        });
+
+        if(!matches){
+            const empty=document.createElement("div");
+            empty.className="text-muted d-block p-2 small";
+            empty.textContent="No matching menu options";
+            searchResults.appendChild(empty);
+        }
+
+        searchResults.style.display="block";
+        return;
+    }
+
+    menuItems.forEach(function(item){
+
+        let text=item.innerText.toLowerCase();
+
+        item.style.display=text.includes(value)
+            ? "flex"
+            : "none";
+
+    });
+
+});
+
+searchBox.addEventListener("keydown",function(event){
+    if(event.key === "Escape"){
+        searchBox.value="";
+        searchResults.innerHTML="";
+        searchResults.style.display="none";
+        searchContainer.classList.remove("search-open");
+        searchBox.blur();
+    }
+});
+
+</script>
+
+<!-- Calendar Modal -->
+
+<div class="modal fade"
+     id="calendarModal"
+     tabindex="-1">
+
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+
+        <div class="modal-content border-0 shadow">
+
+            <div class="modal-header">
+
+                <h5 class="modal-title">
+
+                    <i class="bi bi-calendar3 text-primary"></i>
+
+                    Event Calendar
+
+                </h5>
+
+                <button
+                    class="btn-close"
+                    data-bs-dismiss="modal">
+                </button>
+
+            </div>
+
+            <div class="modal-body">
+
+                <div id="calendar"></div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<footer class="footer mt-5 py-3">
+    <div class="container text-center">
+
+        <small>
+            © 2026 Event Registration System |
+            Developed by <strong>Varshitha</strong>
+        </small>
+
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.15/index.global.min.js"></script>
+<script>
+let calendar;
+
+document.getElementById("calendarModal").addEventListener("shown.bs.modal", function () {
+
+    if (!calendar) {
+
+        calendar = new FullCalendar.Calendar(
+            document.getElementById("calendar"),
+            {
+                initialView: "dayGridMonth",
+                height: 600,
+
+                headerToolbar: {
+                    left: "prev,today,next",
+                    center: "title",
+                    right: ""
+                },
+
+                events: {{ calendar_events|safe }}
+            }
+        );
+
+        calendar.render();
+
+    } else {
+
+        calendar.updateSize();
+
+    }
+
+});
+</script>
+
+{% include 'chatbot.html' %}
+
+</body>
+</html>

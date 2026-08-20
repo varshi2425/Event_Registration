@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Events</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+<div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div><h1 class="h3 mb-1"><i class="bi bi-calendar-event me-2"></i>Events</h1><p class="text-muted mb-0">Browse and register for available events.</p></div>
+        <a href="{% url 'user_dashboard' %}" class="btn btn-outline-secondary"><i class="bi bi-arrow-left me-1"></i>Dashboard</a>
+    </div>
+
+    <form method="get" class="card card-body shadow-sm border-0 mb-4">
+        <div class="row g-3">
+            <div class="col-md-5"><label class="form-label" for="event-search">Search</label><input id="event-search" class="form-control" name="search" value="{{ search_query }}" placeholder="Name, code, venue, or category"></div>
+            <div class="col-md-3"><label class="form-label" for="event-category">Category</label><select id="event-category" class="form-select" name="category"><option value="">All categories</option>{% for category in categories %}<option value="{{ category.id }}" {% if category.id|stringformat:'s' == category_filter %}selected{% endif %}>{{ category.category_name }}</option>{% endfor %}</select></div>
+            <div class="col-md-3"><label class="form-label" for="event-status">Status</label><select id="event-status" class="form-select" name="status"><option value="">All statuses</option>{% for status in event_statuses %}<option value="{{ status }}" {% if status == status_filter %}selected{% endif %}>{{ status }}</option>{% endfor %}</select></div>
+            <div class="col-md-1 d-flex align-items-end"><button class="btn btn-primary w-100" type="submit" aria-label="Search events" title="Search events"><i class="bi bi-search"></i></button></div>
+        </div>
+        {% if search_query or category_filter or status_filter %}
+            <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
+                <small class="text-muted">Filters are active</small>
+                <a href="{% url 'user_events' %}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-x-circle me-1"></i>Clear Filters</a>
+            </div>
+        {% endif %}
+    </form>
+
+    <p class="text-muted small mb-3">Showing <span id="event-count">{{ event_count }}</span> event<span id="event-count-label">{{ event_count|pluralize }}</span>.</p>
+
+    <div class="row g-4" id="event-results">
+        {% for event in events %}
+        <div class="col-md-6 col-lg-4 event-result" data-search="{{ event.event_name }} {{ event.event_code }} {{ event.category.category_name }} {{ event.venue }} {{ event.description }}">
+            <article class="card h-100 shadow-sm border-0"><div class="card-body d-flex flex-column">
+                <div class="d-flex justify-content-between gap-2"><h2 class="h5">{{ event.event_name }}</h2><span class="badge text-bg-primary align-self-start">{{ event.status }}</span></div>
+                <p class="text-muted small mb-1"><i class="bi bi-upc me-1"></i>{{ event.event_code }}</p>
+                <p class="text-muted small mb-1"><i class="bi bi-tag me-1"></i>{{ event.category.category_name }}</p>
+                <p class="text-muted small mb-1"><i class="bi bi-geo-alt me-1"></i>{{ event.venue }}</p>
+                <p class="small flex-grow-1">{{ event.description }}</p>
+                <p class="small mb-2 {% if event.registered_count >= event.max_participants %}text-danger{% else %}text-success{% endif %}">
+                    <i class="bi bi-people me-1"></i>{{ event.registered_count }} / {{ event.max_participants }} seats filled
+                </p>
+                <p class="small text-muted">{{ event.start_date|date:'d M Y' }} to {{ event.end_date|date:'d M Y' }}</p>
+                <div class="d-flex gap-2">{% if event.id in registered_event_ids %}<span class="btn btn-success disabled flex-grow-1"><i class="bi bi-check-circle me-1"></i>Registered</span>{% elif event.status == 'Completed' or event.status == 'Cancelled' %}<span class="btn btn-secondary disabled flex-grow-1">Registration closed</span>{% else %}<a href="{% url 'register_event' event.id %}" class="btn btn-success flex-grow-1"><i class="bi bi-person-plus me-1"></i>Register</a>{% endif %}<a href="{% url 'event_details' event.id %}" class="btn btn-outline-primary">Details</a></div>
+            </div></article>
+        </div>
+        {% empty %}<div class="col-12" id="no-server-results"><div class="alert alert-info">No events match your search or filters.</div></div>{% endfor %}
+    </div>
+
+    {% if page_obj.has_other_pages %}
+    <nav class="mt-4" aria-label="Event pages">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}<li class="page-item"><a class="page-link" href="?search={{ search_query|urlencode }}&category={{ category_filter }}&status={{ status_filter }}&page={{ page_obj.previous_page_number }}">Previous</a></li>{% endif %}
+            {% for number in page_obj.paginator.page_range %}<li class="page-item {% if page_obj.number == number %}active{% endif %}"><a class="page-link" href="?search={{ search_query|urlencode }}&category={{ category_filter }}&status={{ status_filter }}&page={{ number }}">{{ number }}</a></li>{% endfor %}
+            {% if page_obj.has_next %}<li class="page-item"><a class="page-link" href="?search={{ search_query|urlencode }}&category={{ category_filter }}&status={{ status_filter }}&page={{ page_obj.next_page_number }}">Next</a></li>{% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% include 'chatbot.html' %}
+<script>
+    (function () {
+        const searchInput = document.getElementById("event-search");
+        const cards = Array.from(document.querySelectorAll(".event-result"));
+        const count = document.getElementById("event-count");
+        const countLabel = document.getElementById("event-count-label");
+        const results = document.getElementById("event-results");
+        let liveEmptyState = document.getElementById("live-empty-state");
+
+        if (!searchInput || !cards.length) return;
+
+        searchInput.addEventListener("input", function () {
+            const query = searchInput.value.trim().toLowerCase();
+            let visibleCount = 0;
+
+            cards.forEach(function (card) {
+                const matches = !query || card.dataset.search.toLowerCase().includes(query);
+                card.classList.toggle("d-none", !matches);
+                if (matches) visibleCount += 1;
+            });
+
+            count.textContent = visibleCount;
+            countLabel.textContent = visibleCount === 1 ? "" : "s";
+
+            if (visibleCount === 0) {
+                if (!liveEmptyState) {
+                    liveEmptyState = document.createElement("div");
+                    liveEmptyState.id = "live-empty-state";
+                    liveEmptyState.className = "col-12";
+                    liveEmptyState.innerHTML = '<div class="alert alert-info">No events match your search.</div>';
+                    results.appendChild(liveEmptyState);
+                }
+            } else if (liveEmptyState) {
+                liveEmptyState.remove();
+                liveEmptyState = null;
+            }
+        });
+    })();
+</script>
+</body>
+</html>

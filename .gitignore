@@ -1,0 +1,19 @@
+env/
+.venv/
+__pycache__/
+*.py[cod]
+
+# Local Django files
+db.sqlite3
+media/
+staticfiles/
+
+# Local configuration and secrets
+.env
+*.local
+
+# IDE and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
