@@ -28,6 +28,8 @@ SECRET_KEY = os.environ.get(
 
 DEBUG = os.environ.get("DEBUG", "True").lower() == "true"
 
+render_hostname = os.environ.get("RENDER_EXTERNAL_HOSTNAME")
+
 ALLOWED_HOSTS = [
     host.strip()
     for host in os.environ.get(
@@ -36,6 +38,8 @@ ALLOWED_HOSTS = [
     ).split(",")
     if host.strip()
 ]
+if render_hostname:
+    ALLOWED_HOSTS.append(render_hostname)
 
 # Set this to the public host so generated QR codes open the deployed app.
 SITE_URL = os.environ.get("SITE_URL", "http://127.0.0.1:8000").rstrip("/")
@@ -48,6 +52,8 @@ CSRF_TRUSTED_ORIGINS = [
     ).split(",")
     if origin.strip()
 ]
+if render_hostname:
+    CSRF_TRUSTED_ORIGINS.append(f"https://{render_hostname}")
 
 if not DEBUG:
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
