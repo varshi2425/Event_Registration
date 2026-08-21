@@ -62,23 +62,26 @@ class Event(models.Model):
         super().save(*args, **kwargs)
 
         if not self.event_qr_code:
-            registration_path = reverse(
-                "register_event",
-                kwargs={"id": self.id},
-            )
-            registration_url = (
-                f"{settings.SITE_URL.rstrip('/')}{registration_path}"
-            )
-            qr = qrcode.make(registration_url)
-            buffer = BytesIO()
-            qr.save(buffer, format="PNG")
-            filename = f"{self.event_name}_{self.id}.png"
-            self.event_qr_code.save(
-                filename,
-                File(buffer),
-                save=False,
-            )
-            super().save(update_fields=["event_qr_code"])
+            self.generate_event_qr_code()
+
+    def generate_event_qr_code(self):
+        registration_path = reverse(
+            "register_event",
+            kwargs={"id": self.id},
+        )
+        registration_url = (
+            f"{settings.SITE_URL.rstrip('/')}{registration_path}"
+        )
+        qr = qrcode.make(registration_url)
+        buffer = BytesIO()
+        qr.save(buffer, format="PNG")
+        filename = f"{self.event_name}_{self.id}.png"
+        self.event_qr_code.save(
+            filename,
+            File(buffer),
+            save=False,
+        )
+        super().save(update_fields=["event_qr_code"])
 
     def delete(self, *args, **kwargs):
         if self.event_qr_code:

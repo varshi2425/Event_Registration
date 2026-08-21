@@ -510,6 +510,12 @@ def user_calendar(request):
 
 @login_required
 def user_events(request):
+    missing_qr_events = Event.objects.filter(
+        Q(event_qr_code__isnull=True) | Q(event_qr_code="")
+    )
+    for event in missing_qr_events:
+        event.generate_event_qr_code()
+
     events = Event.objects.annotate(
         registered_count=Count("eventmember")
     ).select_related("category")
