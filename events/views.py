@@ -2,7 +2,13 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 import csv
-from .models import EventCategory, Event, EventMember, EventFeedback
+from .models import (
+    EventCategory,
+    Event,
+    EventMember,
+    EventFeedback,
+    mark_completed_events,
+)
 from .forms import EventCategoryForm, EventForm, EventMemberForm, EventFeedbackForm
 from django.contrib import messages
 from accounts.models import Notification
@@ -178,6 +184,7 @@ def create_event(request):
 
 def event_list(request):
 
+    mark_completed_events()
     events = Event.objects.all()
 
     return render(
@@ -210,6 +217,7 @@ def feedback_list(request):
 
 def event_details(request, id):
 
+    mark_completed_events()
     event = get_object_or_404(
         Event,
         id=id
@@ -580,17 +588,11 @@ def check_in(request, event_id, qr_token):
         },
     )
 
-from django.utils import timezone
-from datetime import timedelta
-
-Notification.objects.filter(
-    created_at__lt=timezone.now() - timedelta(hours=24)
-).delete()
-
 from django.contrib.auth.decorators import login_required
 @login_required
 def register_event(request, id):
 
+    mark_completed_events()
     event = get_object_or_404(
         Event,
         id=id
@@ -759,6 +761,7 @@ def qr_scanner_home(request):
         )
         return redirect("user_dashboard")
 
+    mark_completed_events()
     events = Event.objects.exclude(
         status__in=["Completed", "Cancelled"]
     ).order_by("start_date", "event_name")

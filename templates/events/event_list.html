@@ -169,6 +169,18 @@
                                 Scan Attendance
                             </a>
 
+                            {% if event.event_qr_code %}
+                            <a
+                                href="{{ event.event_qr_code.url }}"
+                                class="btn btn-outline-primary btn-sm mb-1"
+                                target="_blank"
+                                rel="noopener"
+                            >
+                                <i class="bi bi-qr-code"></i>
+                                Registration QR
+                            </a>
+                            {% endif %}
+
                             {% endif %}
 
                         </td>

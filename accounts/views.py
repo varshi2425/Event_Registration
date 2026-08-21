@@ -7,7 +7,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse
 import events
-from events.models import EventCategory, Event, EventMember
+from events.models import EventCategory, Event, EventMember, mark_completed_events
 from .models import Profile, SupportRequest, Customization ,Notification
 from .forms import UserUpdateForm, ProfileUpdateForm, SupportForm, CustomizationForm
 from django.contrib.auth.forms import PasswordChangeForm
@@ -15,6 +15,16 @@ from django.db.models import Count
 from django.core.paginator import Paginator
 from datetime import date, timedelta
 import json
+
+USER_EVENT_NOTIFICATION_TITLES = [
+    "New Event Created",
+    "Event Updated",
+]
+
+
+def cleanup_notifications():
+    Notification.delete_expired()
+
 # Signup
 
 def signup_view(request):
@@ -110,6 +120,9 @@ def admin_dashboard(request):
 
     if not request.user.is_staff:
         return redirect("user_dashboard")
+
+    cleanup_notifications()
+    mark_completed_events()
 
     profile, _ = Profile.objects.get_or_create(user=request.user)
     customization, created = Customization.objects.get_or_create(id=1)
@@ -396,6 +409,8 @@ def user_dashboard(request):
 
 @login_required
 def user_dashboard(request):
+    cleanup_notifications()
+    mark_completed_events()
     profile, _ = Profile.objects.get_or_create(user=request.user)
     registrations = EventMember.objects.filter(user=request.user)
     today = timezone.now().date()
@@ -414,10 +429,12 @@ def user_dashboard(request):
         form = CustomizationForm(instance=customization)
 
     notifications = Notification.objects.filter(
-        Q(user=request.user) | Q(user__isnull=True)
+        Q(user=request.user) | Q(user__isnull=True),
+        title__in=USER_EVENT_NOTIFICATION_TITLES,
     ).order_by("-created_at")[:5]
     unread_count = Notification.objects.filter(
         Q(user=request.user) | Q(user__isnull=True),
+        title__in=USER_EVENT_NOTIFICATION_TITLES,
         is_read=False,
     ).count()
 
@@ -714,12 +731,14 @@ from django.views.decorators.http import require_POST
 
 @login_required
 def mark_notifications_read(request):
+    cleanup_notifications()
 
     if request.user.is_staff:
         Notification.objects.filter(is_read=False).update(is_read=True)
     else:
         Notification.objects.filter(
             Q(user=request.user) | Q(user__isnull=True),
+            title__in=USER_EVENT_NOTIFICATION_TITLES,
             is_read=False,
         ).update(is_read=True)
 
@@ -756,13 +775,15 @@ def chatbot_reply(request):
 
 @login_required
 def notification_list(request):
+    cleanup_notifications()
 
     if request.user.is_staff:
         notifications = Notification.objects.order_by("-created_at")
         template = "admin/notifications.html"
     else:
         notifications = Notification.objects.filter(
-            Q(user=request.user) | Q(user__isnull=True)
+            Q(user=request.user) | Q(user__isnull=True),
+            title__in=USER_EVENT_NOTIFICATION_TITLES,
         ).order_by("-created_at")
         template = "user/notifications.html"
 

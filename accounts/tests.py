@@ -1,5 +1,7 @@
 from django.contrib.auth.models import User
 from django.test import TestCase
+from django.utils import timezone
+from datetime import timedelta
 from django.urls import reverse
 
 from .models import Customization, Notification, Profile
@@ -70,15 +72,20 @@ class UserDashboardFeatureTests(TestCase):
 
 	def test_dashboard_renders_calendar_notifications_and_customization(self):
 		Notification.objects.create(
-			title="Event update",
+			title="Event Updated",
 			message="An event was updated.",
+		)
+		Notification.objects.create(
+			title="Category Created",
+			message="An internal category update.",
 		)
 
 		response = self.client.get(reverse("user_dashboard"))
 
 		self.assertEqual(response.status_code, 200)
 		self.assertContains(response, "Dashboard Customization")
-		self.assertContains(response, "Event update")
+		self.assertContains(response, "Event Updated")
+		self.assertNotContains(response, "An internal category update.")
 		self.assertContains(response, reverse("user_calendar"))
 		self.assertContains(response, "View All Notifications")
 
@@ -91,6 +98,36 @@ class UserDashboardFeatureTests(TestCase):
 		self.assertContains(calendar_response, "userCalendar")
 		self.assertEqual(notification_response.status_code, 200)
 		self.assertContains(notification_response, "All Notifications")
+
+	def test_notifications_older_than_24_hours_are_deleted(self):
+		expired = Notification.objects.create(
+			title="Event Updated",
+			message="Expired event notification.",
+		)
+		Notification.objects.filter(id=expired.id).update(
+			created_at=timezone.now() - timedelta(hours=25),
+		)
+
+		response = self.client.get(reverse("notification_list"))
+
+		self.assertEqual(response.status_code, 200)
+		self.assertFalse(Notification.objects.filter(id=expired.id).exists())
+
+	def test_saving_notification_removes_expired_notifications(self):
+		expired = Notification.objects.create(
+			title="Old Notification",
+			message="Expired notification.",
+		)
+		Notification.objects.filter(id=expired.id).update(
+			created_at=timezone.now() - timedelta(hours=25),
+		)
+
+		Notification.objects.create(
+			title="Event Updated",
+			message="Fresh notification.",
+		)
+
+		self.assertFalse(Notification.objects.filter(id=expired.id).exists())
 
 	def test_user_can_save_dashboard_customization(self):
 		response = self.client.post(

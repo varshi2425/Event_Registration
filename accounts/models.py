@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
+from datetime import timedelta
+from django.utils import timezone
 
 
 class Profile(models.Model):
@@ -115,3 +117,12 @@ class Notification(models.Model):
 
     def __str__(self):
         return self.title
+
+    @classmethod
+    def delete_expired(cls):
+        cutoff = timezone.now() - timedelta(hours=24)
+        return cls.objects.filter(created_at__lt=cutoff).delete()
+
+    def save(self, *args, **kwargs):
+        self.delete_expired()
+        super().save(*args, **kwargs)

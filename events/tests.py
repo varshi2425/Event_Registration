@@ -1,8 +1,16 @@
 from django.contrib.auth.models import User
 from django.test import TestCase
+from django.utils import timezone
+from datetime import timedelta
 from django.urls import reverse
 
-from .models import Event, EventCategory, EventFeedback, EventMember
+from .models import (
+	Event,
+	EventCategory,
+	EventFeedback,
+	EventMember,
+	mark_completed_events,
+)
 
 
 class UserQrCodeTests(TestCase):
@@ -54,6 +62,37 @@ class UserQrCodeTests(TestCase):
 		self.assertEqual(response.status_code, 200)
 		self.assertContains(response, "QR User")
 		self.assertNotContains(response, "Other User")
+
+	def test_event_generates_registration_qr_code(self):
+		self.assertTrue(self.event.event_qr_code)
+		self.assertTrue(self.event.event_qr_code.name.startswith("event_qr_codes/"))
+
+		response = self.client.get(
+			reverse("event_details", kwargs={"id": self.event.id})
+		)
+
+		self.assertContains(response, self.event.event_qr_code.url)
+
+	def test_ended_event_is_marked_completed(self):
+		self.event.end_date = timezone.localdate() - timedelta(days=1)
+		self.event.status = "Ongoing"
+		self.event.save()
+
+		mark_completed_events()
+
+		self.event.refresh_from_db()
+		self.assertEqual(self.event.status, "Completed")
+
+	def test_started_event_is_marked_ongoing(self):
+		self.event.start_date = timezone.localdate()
+		self.event.end_date = timezone.localdate() + timedelta(days=1)
+		self.event.status = "Upcoming"
+		self.event.save()
+
+		mark_completed_events()
+
+		self.event.refresh_from_db()
+		self.assertEqual(self.event.status, "Ongoing")
 
 
 class UserDashboardSearchTests(TestCase):

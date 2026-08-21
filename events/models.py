@@ -7,6 +7,7 @@ from django.core.files import File
 from django.urls import reverse
 from django.conf import settings
 from django.core.validators import MaxValueValidator, MinValueValidator
+from django.utils import timezone
 
 
 class EventCategory(models.Model):
@@ -42,6 +43,12 @@ class Event(models.Model):
         null=True,
     )
 
+    event_qr_code = models.ImageField(
+        upload_to="event_qr_codes/",
+        blank=True,
+        null=True,
+    )
+
     status = models.CharField(
         max_length=20,
         choices=STATUS_CHOICES,
@@ -50,6 +57,51 @@ class Event(models.Model):
 
     def __str__(self):
         return self.event_name
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
+        if not self.event_qr_code:
+            registration_path = reverse(
+                "register_event",
+                kwargs={"id": self.id},
+            )
+            registration_url = (
+                f"{settings.SITE_URL.rstrip('/')}{registration_path}"
+            )
+            qr = qrcode.make(registration_url)
+            buffer = BytesIO()
+            qr.save(buffer, format="PNG")
+            filename = f"{self.event_name}_{self.id}.png"
+            self.event_qr_code.save(
+                filename,
+                File(buffer),
+                save=False,
+            )
+            super().save(update_fields=["event_qr_code"])
+
+    def delete(self, *args, **kwargs):
+        if self.event_qr_code:
+            self.event_qr_code.delete(save=False)
+        super().delete(*args, **kwargs)
+
+
+def mark_completed_events():
+    today = timezone.localdate()
+
+    completed_count = Event.objects.filter(
+        end_date__lt=timezone.localdate(),
+    ).exclude(
+        status__in=["Completed", "Cancelled"],
+    ).update(status="Completed")
+
+    ongoing_count = Event.objects.filter(
+        start_date__lte=today,
+        end_date__gte=today,
+        status="Upcoming",
+    ).update(status="Ongoing")
+
+    return completed_count + ongoing_count
 
 
 class EventFeedback(models.Model):

@@ -67,6 +67,57 @@
             color: #991b1b;
         }
 
+        .scanner-controls {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        input, a {
+            border: 0;
+            border-radius: 8px;
+            padding: 10px 16px;
+            font-size: 15px;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        input[type="file"] {
+            width: 100%;
+            border: 1px solid #d1d5db;
+            background: #f9fafb;
+        }
+
+        .file-help {
+            color: #4b5563;
+            font-size: 14px;
+            margin: 0;
+        }
+
+        a {
+            align-self: center;
+            background: #e5e7eb;
+            color: #1f2937;
+        }
+
+        #reader {
+            min-height: 1px;
+        }
+
+        #scan-preview {
+            display: none;
+            max-width: 100%;
+            max-height: 280px;
+            margin: 15px auto 0;
+        }
+
+        #scan-file {
+            background: #2563eb;
+            color: white;
+        }
+
     </style>
 
 </head>
@@ -82,7 +133,14 @@
         Scan a registered member's QR code
     </p>
 
+    <div class="scanner-controls">
+        <p class="file-help">Upload a saved QR code image from your laptop to check in the member.</p>
+        <input id="scan-file" type="file" accept="image/png,image/jpeg,image/webp">
+        <a href="{% url 'admin_dashboard' %}">Dashboard</a>
+    </div>
+
     <div id="reader"></div>
+    <img id="scan-preview" alt="Selected QR code preview">
 
     <div id="result"></div>
 
@@ -113,15 +171,16 @@ function onScanSuccess(decodedText, decodedResult) {
     );
     try {
         const scannedUrl = new URL(decodedText, window.location.origin);
+        const checkInPathPattern = /^\/events\/check-in\/\d+\/[0-9a-f-]+\/$/i;
 
-        if (scannedUrl.origin !== window.location.origin) {
+        if (!checkInPathPattern.test(scannedUrl.pathname)) {
             throw new Error("Unexpected QR destination");
         }
 
-        window.location.href = scannedUrl.href;
+        window.location.href = `${window.location.origin}${scannedUrl.pathname}`;
     } catch (error) {
         showResult(
-            "This QR code is not a valid check-in code.",
+            "This is not a valid attendee check-in QR code.",
             "error"
         );
     }
@@ -135,24 +194,35 @@ function onScanFailure(error) {
 }
 
 
-const html5QrcodeScanner =
-    new Html5QrcodeScanner(
-        "reader",
-        {
-            fps: 10,
-            qrbox: {
-                width: 250,
-                height: 250
-            }
-        },
-        false
-    );
+const scanFileInput = document.getElementById("scan-file");
+const scanPreview = document.getElementById("scan-preview");
 
+scanFileInput.addEventListener("change", async function () {
+    const file = scanFileInput.files[0];
 
-html5QrcodeScanner.render(
-    onScanSuccess,
-    onScanFailure
-);
+    if (!file) {
+        return;
+    }
+
+    scanPreview.src = URL.createObjectURL(file);
+    scanPreview.style.display = "block";
+    showResult("Reading QR code image...", "success");
+
+    try {
+        const scanner = new Html5Qrcode("reader");
+        const decodedText = await scanner.scanFile(file, false);
+        scanner.clear();
+        onScanSuccess(decodedText);
+    } catch (error) {
+        showResult(
+            "No valid QR code was found in that image. Upload a clear member QR code and try again.",
+            "error"
+        );
+        console.error("Unable to read QR image:", error);
+    } finally {
+        scanFileInput.value = "";
+    }
+});
 
 </script>
 
