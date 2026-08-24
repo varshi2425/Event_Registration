@@ -84,7 +84,10 @@ class Event(models.Model):
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
 
-        if not self.event_qr_code:
+        if (
+            not self.event_qr_code
+            or not self.event_qr_code.storage.exists(self.event_qr_code.name)
+        ):
             self.generate_event_qr_code()
 
     def generate_event_qr_code(self):

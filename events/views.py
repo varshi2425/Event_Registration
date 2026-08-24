@@ -225,6 +225,11 @@ def event_details(request, id):
         Event,
         id=id
     )
+    if (
+        not event.event_qr_code
+        or not event.event_qr_code.storage.exists(event.event_qr_code.name)
+    ):
+        event.generate_event_qr_code()
 
     feedback_form = None
     is_wishlisted = False

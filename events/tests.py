@@ -86,6 +86,21 @@ class UserQrCodeTests(TestCase):
 		self.assertTrue(self.event.event_qr_code)
 		self.assertContains(response, self.event.event_qr_code.url)
 
+	def test_event_details_repairs_missing_event_qr_file(self):
+		qr_name = self.event.event_qr_code.name
+		self.event.event_qr_code.storage.delete(qr_name)
+
+		response = self.client.get(
+			reverse("event_details", kwargs={"id": self.event.id})
+		)
+
+		self.event.refresh_from_db()
+		self.assertEqual(response.status_code, 200)
+		self.assertTrue(self.event.event_qr_code.storage.exists(
+			self.event.event_qr_code.name
+		))
+		self.assertContains(response, self.event.event_qr_code.url)
+
 	def test_ended_event_is_marked_completed(self):
 		self.event.end_date = timezone.localdate() - timedelta(days=1)
 		self.event.status = "Ongoing"
