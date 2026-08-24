@@ -74,6 +74,13 @@ class Event(models.Model):
         })
         return f"https://calendar.google.com/calendar/render?{query}"
 
+    @property
+    def google_maps_url(self):
+        return (
+            "https://www.google.com/maps/search/?api=1&"
+            f"{urlencode({'query': self.venue})}"
+        )
+
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
 

@@ -129,6 +129,16 @@
     Add to Google Calendar
 </a>
 
+<a
+    href="{{ event.google_maps_url }}"
+    class="btn btn-outline-primary"
+    target="_blank"
+    rel="noopener"
+    aria-label="Find {{ event.venue }} on Google Maps">
+    <i class="bi bi-geo-alt me-1"></i>
+    Find on Google Maps
+</a>
+
 {% if request.user.is_staff %}
 
     <a
