@@ -7,7 +7,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.urls import reverse
 import events
-from events.models import EventCategory, Event, EventMember, mark_completed_events
+from events.models import EventCategory, Event, EventMember, EventWishlist, mark_completed_events
 from .models import Profile, SupportRequest, Customization ,Notification
 from .forms import UserUpdateForm, ProfileUpdateForm, SupportForm, CustomizationForm
 from django.contrib.auth.forms import PasswordChangeForm
@@ -541,6 +541,9 @@ def user_events(request):
     registered_event_ids = EventMember.objects.filter(
         user=request.user
     ).values_list("event_id", flat=True)
+    wishlist_event_ids = EventWishlist.objects.filter(
+        user=request.user
+    ).values_list("event_id", flat=True)
 
     paginator = Paginator(
         events.order_by("start_date", "event_name"),
@@ -560,6 +563,7 @@ def user_events(request):
                 "status", flat=True
             ).distinct(),
             "registered_event_ids": registered_event_ids,
+            "wishlist_event_ids": wishlist_event_ids,
             "search_query": search_query,
             "category_filter": category_filter,
             "status_filter": status_filter,

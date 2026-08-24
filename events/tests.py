@@ -10,6 +10,7 @@ from .models import (
 	EventCategory,
 	EventFeedback,
 	EventMember,
+	EventWishlist,
 	mark_completed_events,
 )
 
@@ -192,6 +193,55 @@ class RegistrationEnhancementTests(TestCase):
 
 		self.assertRedirects(response, reverse("my_registrations"))
 		self.assertFalse(EventMember.objects.filter(id=self.registration.id).exists())
+
+	def test_user_can_add_and_remove_event_from_wishlist(self):
+		self.client.login(username="registration-user", password="test-password-123")
+		wishlist_url = reverse(
+			"toggle_wishlist",
+			kwargs={"id": self.event.id},
+		)
+
+		add_response = self.client.post(wishlist_url)
+
+		self.assertRedirects(
+			add_response,
+			reverse("event_details", kwargs={"id": self.event.id}),
+		)
+		self.assertTrue(
+			EventWishlist.objects.filter(
+				user=self.user,
+				event=self.event,
+			).exists()
+		)
+
+		remove_response = self.client.post(wishlist_url)
+
+		self.assertRedirects(
+			remove_response,
+			reverse("event_details", kwargs={"id": self.event.id}),
+		)
+		self.assertFalse(
+			EventWishlist.objects.filter(
+				user=self.user,
+				event=self.event,
+			).exists()
+		)
+
+	def test_wishlist_page_shows_only_current_users_events(self):
+		EventWishlist.objects.create(user=self.user, event=self.event)
+		self.client.login(username="registration-user", password="test-password-123")
+
+		response = self.client.get(reverse("wishlist"))
+
+		self.assertEqual(response.status_code, 200)
+		self.assertContains(response, "Django Meetup")
+
+	def test_staff_cannot_use_user_wishlist(self):
+		self.client.login(username="staff-user", password="test-password-123")
+
+		response = self.client.get(reverse("wishlist"))
+
+		self.assertRedirects(response, reverse("admin_dashboard"))
 
 	def test_staff_check_in_marks_member_once(self):
 		self.client.login(username="staff-user", password="test-password-123")

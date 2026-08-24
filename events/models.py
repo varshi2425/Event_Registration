@@ -246,13 +246,39 @@ class EventMember(models.Model):
             except Exception as e:
 
                 print("QR Generation Error:", e)
-def delete(self, *args, **kwargs):
-    if self.qr_code:
-        self.qr_code.delete(save=False)
+    def delete(self, *args, **kwargs):
+        if self.qr_code:
+            self.qr_code.delete(save=False)
 
-    super().delete(*args, **kwargs)
-    
-        
+        super().delete(*args, **kwargs)
+
+
+class EventWishlist(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="event_wishlist",
+    )
+    event = models.ForeignKey(
+        Event,
+        on_delete=models.CASCADE,
+        related_name="wishlisted_by",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["user", "event"],
+                name="unique_event_wishlist_per_user",
+            ),
+        ]
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.user} wishlist: {self.event}"
+
+
 class SupportRequest(models.Model):
 
     STATUS_CHOICES = [

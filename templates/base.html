@@ -85,6 +85,13 @@ Categories
 Events
 </a>
 
+{% if not request.user.is_staff %}
+<a href="{% url 'wishlist' %}">
+<i class="bi bi-heart"></i>
+Wishlist
+</a>
+{% endif %}
+
 <a href="{% url 'member_list' %}">
 <i class="bi bi-people"></i>
 Members

@@ -61,6 +61,16 @@ path(
     views.submit_feedback,
     name="submit_feedback"
 ),
+    path(
+        "event-details/<int:id>/wishlist/",
+        views.toggle_wishlist,
+        name="toggle_wishlist"
+    ),
+    path(
+        "wishlist/",
+        views.wishlist,
+        name="wishlist"
+    ),
 path(
     "add-member/",
     views.add_event_member,

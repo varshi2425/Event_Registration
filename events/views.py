@@ -10,6 +10,7 @@ from .models import (
     EventMember,
     EventFeedback,
     mark_completed_events,
+        EventWishlist,
 )
 from .forms import EventCategoryForm, EventForm, EventMemberForm, EventFeedbackForm
 from django.contrib import messages
@@ -226,7 +227,12 @@ def event_details(request, id):
     )
 
     feedback_form = None
+    is_wishlisted = False
     if request.user.is_authenticated and not request.user.is_staff:
+        is_wishlisted = EventWishlist.objects.filter(
+            user=request.user,
+            event=event,
+        ).exists()
         feedback_form = EventFeedbackForm(
             instance=EventFeedback.objects.filter(
                 event=event,
@@ -241,7 +247,45 @@ def event_details(request, id):
             "event": event,
             "feedback": event.feedback.select_related("user"),
             "feedback_form": feedback_form,
+            "is_wishlisted": is_wishlisted,
         }
+    )
+@login_required
+def toggle_wishlist(request, id):
+    if request.user.is_staff:
+        return redirect("event_details", id=id)
+
+    if request.method != "POST":
+        return redirect("event_details", id=id)
+
+    event = get_object_or_404(Event, id=id)
+    wishlist_item, created = EventWishlist.objects.get_or_create(
+        user=request.user,
+        event=event,
+    )
+    if created:
+        messages.success(request, f"{event.event_name} was added to your wishlist.")
+    else:
+        wishlist_item.delete()
+        messages.info(request, f"{event.event_name} was removed from your wishlist.")
+
+    next_url = request.POST.get("next")
+    if next_url == "wishlist":
+        return redirect("wishlist")
+    return redirect("event_details", id=event.id)
+
+@login_required
+def wishlist(request):
+    if request.user.is_staff:
+        return redirect("admin_dashboard")
+
+    wishlist_items = EventWishlist.objects.filter(
+        user=request.user,
+    ).select_related("event", "event__category")
+    return render(
+        request,
+        "events/wishlist.html",
+        {"wishlist_items": wishlist_items},
     )
 
 
