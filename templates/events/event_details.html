@@ -119,6 +119,16 @@
 </div>
 {% endif %}
 
+<a
+    href="{{ event.google_calendar_url }}"
+    class="btn btn-outline-success"
+    target="_blank"
+    rel="noopener"
+    aria-label="Add {{ event.event_name }} to Google Calendar">
+    <i class="bi bi-google me-1"></i>
+    Add to Google Calendar
+</a>
+
 {% if request.user.is_staff %}
 
     <a

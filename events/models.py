@@ -8,6 +8,8 @@ from django.urls import reverse
 from django.conf import settings
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.utils import timezone
+from datetime import timedelta
+from urllib.parse import urlencode
 
 
 class EventCategory(models.Model):
@@ -57,6 +59,20 @@ class Event(models.Model):
 
     def __str__(self):
         return self.event_name
+
+    @property
+    def google_calendar_url(self):
+        calendar_end_date = self.end_date + timedelta(days=1)
+        query = urlencode({
+            "action": "TEMPLATE",
+            "text": self.event_name,
+            "dates": (
+                f"{self.start_date:%Y%m%d}/{calendar_end_date:%Y%m%d}"
+            ),
+            "details": self.description,
+            "location": self.venue,
+        })
+        return f"https://calendar.google.com/calendar/render?{query}"
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
