@@ -1,6 +1,8 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
+from django.conf import settings
+from django.core.mail import send_mail
 import csv
 from .models import (
     EventCategory,
@@ -536,6 +538,7 @@ def contact_support(request):
 
 from django.shortcuts import render, get_object_or_404
 from django.utils import timezone
+from django.db import transaction
 from .models import EventMember
 
 @login_required
@@ -553,31 +556,32 @@ def check_in(request, event_id, qr_token):
         id=event_id
     )
 
-    member = get_object_or_404(
-        EventMember,
-        qr_token=qr_token
-    )
-
-    # Make sure the QR belongs to the selected event
-    if member.event.id != event.id:
-
-        messages.error(
-            request,
-            "This QR code does not belong to this event."
+    with transaction.atomic():
+        member = get_object_or_404(
+            EventMember.objects.select_for_update(),
+            qr_token=qr_token
         )
 
-        return redirect(
-            "qr_scanner",
-            event_id=event.id
-        )
+        # Make sure the QR belongs to the selected event
+        if member.event.id != event.id:
 
-    already_checked = member.is_checked_in
+            messages.error(
+                request,
+                "This QR code does not belong to this event."
+            )
 
-    if not already_checked:
+            return redirect(
+                "qr_scanner",
+                event_id=event.id
+            )
 
-        member.is_checked_in = True
-        member.checked_in_at = timezone.now()
-        member.save()
+        already_checked = member.is_checked_in
+
+        if not already_checked:
+
+            member.is_checked_in = True
+            member.checked_in_at = timezone.now()
+            member.save(update_fields=["is_checked_in", "checked_in_at"])
 
     return render(
         request,
@@ -690,6 +694,20 @@ def register_event(request, id):
                 f"{request.user.username} registered "
                 f"for {event.event_name}."
             )
+        )
+
+        send_mail(
+            subject=f"Registration confirmed: {event.event_name}",
+            message=(
+                f"Hello {member_name},\n\n"
+                f"Your registration for {event.event_name} is confirmed.\n"
+                f"Date: {event.start_date} to {event.end_date}\n"
+                f"Venue: {event.venue}\n\n"
+                "Please keep your attendee QR code available for check-in."
+            ),
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[email],
+            fail_silently=True,
         )
 
         messages.success(

@@ -2,6 +2,7 @@ from django.contrib.auth.models import User
 from django.test import TestCase
 from django.utils import timezone
 from datetime import timedelta
+from unittest.mock import patch
 from django.urls import reverse
 
 from .models import (
@@ -191,6 +192,83 @@ class RegistrationEnhancementTests(TestCase):
 
 		self.assertRedirects(response, reverse("my_registrations"))
 		self.assertFalse(EventMember.objects.filter(id=self.registration.id).exists())
+
+	def test_staff_check_in_marks_member_once(self):
+		self.client.login(username="staff-user", password="test-password-123")
+		check_in_url = reverse(
+			"check_in",
+			kwargs={
+				"event_id": self.event.id,
+				"qr_token": self.registration.qr_token,
+			},
+		)
+
+		first_response = self.client.get(check_in_url)
+		self.registration.refresh_from_db()
+		first_checked_in_at = self.registration.checked_in_at
+
+		self.assertEqual(first_response.status_code, 200)
+		self.assertContains(first_response, "Check-In Successful")
+		self.assertTrue(self.registration.is_checked_in)
+		self.assertIsNotNone(first_checked_in_at)
+
+		second_response = self.client.get(check_in_url)
+		self.registration.refresh_from_db()
+
+		self.assertEqual(second_response.status_code, 200)
+		self.assertContains(second_response, "Already Checked In")
+		self.assertEqual(self.registration.checked_in_at, first_checked_in_at)
+
+	def test_check_in_rejects_qr_from_another_event(self):
+		other_event = Event.objects.create(
+			event_name="Other Meetup",
+			event_code="OTHER-01",
+			category=self.event.category,
+			description="Another test event",
+			venue="Other Hall",
+			start_date="2026-09-02",
+			end_date="2026-09-02",
+			max_participants=50,
+		)
+		self.client.login(username="staff-user", password="test-password-123")
+		check_in_url = reverse(
+			"check_in",
+			kwargs={
+				"event_id": other_event.id,
+				"qr_token": self.registration.qr_token,
+			},
+		)
+
+		response = self.client.get(check_in_url)
+
+		self.assertRedirects(response, reverse("qr_scanner", kwargs={"event_id": other_event.id}))
+		self.registration.refresh_from_db()
+		self.assertFalse(self.registration.is_checked_in)
+
+	@patch("events.views.send_mail")
+	def test_registration_sends_confirmation_email(self, send_mail_mock):
+		self.registration.delete()
+		self.client.login(username="registration-user", password="test-password-123")
+
+		response = self.client.post(
+			reverse("register_event", kwargs={"id": self.event.id}),
+			{
+				"member_name": "New Attendee",
+				"email": "attendee@example.com",
+				"phone": "9876543210",
+			},
+		)
+
+		self.assertRedirects(response, reverse("user_dashboard"))
+		send_mail_mock.assert_called_once()
+		self.assertEqual(
+			send_mail_mock.call_args.kwargs["recipient_list"],
+			["attendee@example.com"],
+		)
+		self.assertIn(
+			"Registration confirmed: Django Meetup",
+			send_mail_mock.call_args.kwargs["subject"],
+		)
 
 	def test_staff_can_export_attendance_csv(self):
 		self.client.login(username="staff-user", password="test-password-123")
