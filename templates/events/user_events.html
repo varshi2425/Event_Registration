@@ -51,16 +51,20 @@
                 <div class="text-center border rounded p-2 mb-3">
                     <p class="small fw-semibold mb-2"><i class="bi bi-qr-code me-1"></i>Scan to Register</p>
                     <img class="event-registration-qr" src="{{ event.event_qr_code.url }}" alt="QR code to register for {{ event.event_name }}">
+                    {% if event.id in registered_event_ids %}
+                    <p class="small text-success mb-0">Already registered. Use <a href="{% url 'my_qr_codes' %}">My QR Codes</a> for event check-in.</p>
+                    {% else %}
                     <a class="btn btn-outline-primary btn-sm d-block mt-2" href="{{ event.event_qr_code.url }}" download>
                         <i class="bi bi-download me-1"></i>Download QR
                     </a>
+                    {% endif %}
                 </div>
                 {% endif %}
                 <p class="small mb-2 {% if event.registered_count >= event.max_participants %}text-danger{% else %}text-success{% endif %}">
                     <i class="bi bi-people me-1"></i>{{ event.registered_count }} / {{ event.max_participants }} seats filled
                 </p>
                 <p class="small text-muted">{{ event.start_date|date:'d M Y' }} to {{ event.end_date|date:'d M Y' }}</p>
-                <div class="d-flex gap-2 flex-wrap">{% if event.id in registered_event_ids %}<span class="btn btn-success disabled flex-grow-1"><i class="bi bi-check-circle me-1"></i>Registered</span>{% elif event.status == 'Completed' or event.status == 'Cancelled' %}<span class="btn btn-secondary disabled flex-grow-1">Registration closed</span>{% else %}<a href="{% url 'register_event' event.id %}" class="btn btn-success flex-grow-1"><i class="bi bi-person-plus me-1"></i>Register</a>{% endif %}<a href="{% url 'event_details' event.id %}" class="btn btn-outline-primary">Details</a><a href="{{ event.google_calendar_url }}" class="btn btn-outline-success" target="_blank" rel="noopener" aria-label="Add {{ event.event_name }} to Google Calendar" title="Add to Google Calendar"><i class="bi bi-google"></i></a><a href="{{ event.google_maps_url }}" class="btn btn-outline-primary" target="_blank" rel="noopener" aria-label="Find {{ event.venue }} on Google Maps" title="Find on Google Maps"><i class="bi bi-geo-alt"></i></a></div>
+                <div class="d-flex gap-2 flex-wrap">{% if event.id in registered_event_ids %}<span class="btn btn-success disabled flex-grow-1"><i class="bi bi-check-circle me-1"></i>Registered</span>{% elif event.status == 'Completed' or event.status == 'Cancelled' %}<span class="btn btn-secondary disabled flex-grow-1">Registration closed</span>{% else %}<a href="{% url 'register_event' event.id %}" class="btn btn-success flex-grow-1"><i class="bi bi-person-plus me-1"></i>Register</a>{% endif %}<a href="{% url 'event_details' event.id %}" class="btn btn-outline-primary">Details</a><form method="post" action="{% url 'toggle_wishlist' event.id %}" class="d-inline">{% csrf_token %}<button class="btn {% if event.id in wishlist_event_ids %}btn-danger{% else %}btn-outline-danger{% endif %}" type="submit" aria-label="{% if event.id in wishlist_event_ids %}Remove {{ event.event_name }} from wishlist{% else %}Add {{ event.event_name }} to wishlist{% endif %}" title="{% if event.id in wishlist_event_ids %}Remove from wishlist{% else %}Add to wishlist{% endif %}"><i class="bi {% if event.id in wishlist_event_ids %}bi-heart-fill{% else %}bi-heart{% endif %}"></i></button></form><a href="{{ event.google_calendar_url }}" class="btn btn-outline-success" target="_blank" rel="noopener" aria-label="Add {{ event.event_name }} to Google Calendar" title="Add to Google Calendar"><i class="bi bi-google"></i></a><a href="{{ event.google_maps_url }}" class="btn btn-outline-primary" target="_blank" rel="noopener" aria-label="Find {{ event.venue }} on Google Maps" title="Find on Google Maps"><i class="bi bi-geo-alt"></i></a></div>
             </div></article>
         </div>
         {% empty %}<div class="col-12" id="no-server-results"><div class="alert alert-info">No events match your search or filters.</div></div>{% endfor %}

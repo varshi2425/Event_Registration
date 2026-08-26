@@ -129,6 +129,19 @@
     Add to Google Calendar
 </a>
 
+{% if not request.user.is_staff %}
+<form method="post" action="{% url 'toggle_wishlist' event.id %}" class="d-inline">
+    {% csrf_token %}
+    <button
+        type="submit"
+        class="btn {% if is_wishlisted %}btn-danger{% else %}btn-outline-danger{% endif %}"
+        aria-label="{% if is_wishlisted %}Remove from wishlist{% else %}Add to wishlist{% endif %}">
+        <i class="bi {% if is_wishlisted %}bi-heart-fill{% else %}bi-heart{% endif %} me-1"></i>
+        {% if is_wishlisted %}Remove from Wishlist{% else %}Add to Wishlist{% endif %}
+    </button>
+</form>
+{% endif %}
+
 <a
     href="{{ event.google_maps_url }}"
     class="btn btn-outline-primary"

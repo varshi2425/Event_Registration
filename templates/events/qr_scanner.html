@@ -170,11 +170,21 @@ function onScanSuccess(decodedText, decodedResult) {
         "success"
     );
     try {
-        const scannedUrl = new URL(decodedText, window.location.origin);
-        const checkInPathPattern = /^\/events\/check-in\/\d+\/[0-9a-f-]+\/$/i;
+        const scannedUrl = new URL(decodedText.trim(), window.location.origin);
+        const pathParts = scannedUrl.pathname.split("/").filter(Boolean);
+        const checkInIndex = pathParts.lastIndexOf("check-in");
+        const isUuid = value => /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+        const isCheckInPath = checkInIndex > 0
+            && checkInIndex === pathParts.length - 3
+            && /^\d+$/.test(pathParts[checkInIndex + 1])
+            && isUuid(pathParts[checkInIndex + 2]);
 
-        if (!checkInPathPattern.test(scannedUrl.pathname)) {
-            throw new Error("Unexpected QR destination");
+        if (!isCheckInPath) {
+            const message = scannedUrl.pathname.includes("register-event")
+                ? "This is an event registration QR code. Use the attendee QR code from My QR Codes."
+                : "This is not a valid attendee check-in QR code.";
+            showResult(message, "error");
+            return;
         }
 
         window.location.href = `${window.location.origin}${scannedUrl.pathname}`;
