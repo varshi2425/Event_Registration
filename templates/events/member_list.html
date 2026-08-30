@@ -129,6 +129,12 @@ Export CSV
                  alt="QR Code"
                  class="img-fluid"
                  width="140">
+            <a href="{{ member.qr_code.url }}"
+               download
+               class="btn btn-primary btn-sm d-block mt-2">
+                <i class="bi bi-download"></i>
+                Download QR
+            </a>
         {% else %}
             QR Code not generated
         {% endif %}
